@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct RUCBuddyApp: App {
+    @StateObject private var store = CarStore()
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CarListView()
+                .environmentObject(store)
         }
     }
 }
