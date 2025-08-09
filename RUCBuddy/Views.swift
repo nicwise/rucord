@@ -150,6 +150,7 @@ struct CarDetailView: View {
     @State private var newDate: Date = Date()
     @State private var editing = false
     @State private var showRUCQuick = false
+    @State private var showAllHistory = false
     
     var body: some View {
         Form {
@@ -206,12 +207,19 @@ struct CarDetailView: View {
                 if car.entries.isEmpty {
                     Text("No readings yet").foregroundStyle(.secondary)
                 } else {
-                    ForEach(car.entries.sorted { $0.date > $1.date }) { entry in
+                    let sorted = car.entries.sorted { $0.date > $1.date }
+                    let visible = showAllHistory ? sorted : Array(sorted.prefix(3))
+                    ForEach(visible) { entry in
                         HStack {
                             Text(entry.date, style: .date)
                             Spacer()
                             Text("\(entry.value) km")
                                 .foregroundStyle(.secondary)
+                        }
+                    }
+                    if sorted.count > 3 {
+                        Button(showAllHistory ? "Show less" : "Show all") {
+                            withAnimation { showAllHistory.toggle() }
                         }
                     }
                 }
