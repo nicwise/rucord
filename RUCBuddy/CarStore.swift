@@ -38,7 +38,20 @@ final class CarStore: ObservableObject {
     }
     
     private func sort() {
-        cars.sort { $0.plate < $1.plate }
+        cars.sort { a, b in
+            let aExpired = a.distanceRemaining == 0
+            let bExpired = b.distanceRemaining == 0
+            if aExpired != bExpired { return aExpired && !bExpired }
+            
+            let aDays = a.projectedDaysRemaining ?? Double.infinity
+            let bDays = b.projectedDaysRemaining ?? Double.infinity
+            if aDays != bDays { return aDays < bDays }
+            
+            if a.distanceRemaining != b.distanceRemaining {
+                return a.distanceRemaining < b.distanceRemaining
+            }
+            return a.plate < b.plate
+        }
     }
     
     // MARK: Persistence
