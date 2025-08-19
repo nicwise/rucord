@@ -1,6 +1,6 @@
 //
-//  RUCBuddyApp.swift
-//  RUCBuddy
+//  RucordApp.swift
+//  Rucord
 //
 //  Created by Nic Wise on 09/08/2025.
 //

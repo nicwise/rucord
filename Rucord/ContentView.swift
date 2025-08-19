@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  RUCBuddy
+//  Rucord
 //
 //  Created by Nic Wise on 09/08/2025.
 //
