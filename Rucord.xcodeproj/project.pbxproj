@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		04BBA0A02E46FF5E00DC7ECB /* RUCBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RUCBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		04BBA0A02E46FF5E00DC7ECB /* Rucord.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Rucord.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		04BBA0A22E46FF5E00DC7ECB /* RUCBuddy */ = {
+		04BBA0A22E46FF5E00DC7ECB /* Rucord */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = RUCBuddy;
+			path = Rucord;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		04BBA0972E46FF5E00DC7ECB = {
 			isa = PBXGroup;
 			children = (
-				04BBA0A22E46FF5E00DC7ECB /* RUCBuddy */,
+				04BBA0A22E46FF5E00DC7ECB /* Rucord */,
 				04BBA0A12E46FF5E00DC7ECB /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		04BBA0A12E46FF5E00DC7ECB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				04BBA0A02E46FF5E00DC7ECB /* RUCBuddy.app */,
+				04BBA0A02E46FF5E00DC7ECB /* Rucord.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		04BBA09F2E46FF5E00DC7ECB /* RUCBuddy */ = {
+		04BBA09F2E46FF5E00DC7ECB /* Rucord */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 04BBA0AB2E46FF5F00DC7ECB /* Build configuration list for PBXNativeTarget "RUCBuddy" */;
+			buildConfigurationList = 04BBA0AB2E46FF5F00DC7ECB /* Build configuration list for PBXNativeTarget "Rucord" */;
 			buildPhases = (
 				04BBA09C2E46FF5E00DC7ECB /* Sources */,
 				04BBA09D2E46FF5E00DC7ECB /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				04BBA0A22E46FF5E00DC7ECB /* RUCBuddy */,
+				04BBA0A22E46FF5E00DC7ECB /* Rucord */,
 			);
-			name = RUCBuddy;
+			name = Rucord;
 			packageProductDependencies = (
 			);
-			productName = RUCBuddy;
-			productReference = 04BBA0A02E46FF5E00DC7ECB /* RUCBuddy.app */;
+			productName = Rucord;
+			productReference = 04BBA0A02E46FF5E00DC7ECB /* Rucord.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 04BBA09B2E46FF5E00DC7ECB /* Build configuration list for PBXProject "RUCBuddy" */;
+			buildConfigurationList = 04BBA09B2E46FF5E00DC7ECB /* Build configuration list for PBXProject "Rucord" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				04BBA09F2E46FF5E00DC7ECB /* RUCBuddy */,
+				04BBA09F2E46FF5E00DC7ECB /* Rucord */,
 			);
 		};
 /* End PBXProject section */
@@ -266,7 +266,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = nz.fastchicken.RUCBuddy;
+				PRODUCT_BUNDLE_IDENTIFIER = nz.fastchicken.Rucord;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -294,7 +294,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = nz.fastchicken.RUCBuddy;
+				PRODUCT_BUNDLE_IDENTIFIER = nz.fastchicken.Rucord;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -305,7 +305,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		04BBA09B2E46FF5E00DC7ECB /* Build configuration list for PBXProject "RUCBuddy" */ = {
+		04BBA09B2E46FF5E00DC7ECB /* Build configuration list for PBXProject "Rucord" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				04BBA0A92E46FF5F00DC7ECB /* Debug */,
@@ -314,7 +314,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		04BBA0AB2E46FF5F00DC7ECB /* Build configuration list for PBXNativeTarget "RUCBuddy" */ = {
+		04BBA0AB2E46FF5F00DC7ECB /* Build configuration list for PBXNativeTarget "Rucord" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				04BBA0AC2E46FF5F00DC7ECB /* Debug */,

@@ -22,7 +22,7 @@ struct CarListView: View {
                     }
                 }
             }
-            .navigationTitle("RUC Buddy")
+            .navigationTitle("Rucord")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: { showingAdd = true }) {

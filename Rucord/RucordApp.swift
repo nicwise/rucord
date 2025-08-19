@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct RUCBuddyApp: App {
+struct RucordApp: App {
     @StateObject private var store = CarStore()
     
     var body: some Scene {

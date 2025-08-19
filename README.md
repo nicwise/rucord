@@ -1,6 +1,6 @@
-# RUCBuddy
+# Rucord
 
-RUCBuddy is a small SwiftUI iOS app to track NZ Road User Charges (RUC) for one or more cars. Add cars by number plate, record odometer readings over time, and see when your current RUC will expire based on your driving.
+Rucord is a small SwiftUI iOS app to track NZ Road User Charges (RUC) for one or more cars. Add cars by number plate, record odometer readings over time, and see when your current RUC will expire based on your driving.
 
 ## Features
 
@@ -41,24 +41,24 @@ RUCBuddy is a small SwiftUI iOS app to track NZ Road User Charges (RUC) for one 
 
 Requirements: Xcode 15+ (Swift 5, SwiftUI).
 
-- Open `RUCBuddy.xcodeproj` in Xcode and run the `RUCBuddy` scheme on iOS.
+- Open `Rucord.xcodeproj` in Xcode and run the `Rucord` scheme on iOS.
 - Or build via command line:
 
 ```bash
-xcodebuild -scheme RUCBuddy -project RUCBuddy.xcodeproj -destination 'generic/platform=iOS' -configuration Debug build
+xcodebuild -scheme Rucord -project Rucord.xcodeproj -destination 'generic/platform=iOS' -configuration Debug build
 ```
 
 Note: The project’s deployment target may be higher than your installed iOS SDK. If you see a warning, lower the target in the project settings.
 
 ## How it works
 
-- Data models: see [Models.swift](file:///Users/nic/code/mine/RUCBuddy/RUCBuddy/Models.swift)
+- Data models: see [Models.swift](file:///Users/nic/code/mine/Rucord/Rucord/Models.swift)
   - `Car` with `plate`, `expiryOdometer`, and `entries: [OdometerEntry]`
   - Projection uses average km/day over recent entries to estimate days left and a projected expiry date
-- Persistence store: see [CarStore.swift](file:///Users/nic/code/mine/RUCBuddy/RUCBuddy/CarStore.swift)
+- Persistence store: see [CarStore.swift](file:///Users/nic/code/mine/Rucord/Rucord/CarStore.swift)
   - Saves/loads a JSON file in the app’s Documents directory
   - Keeps the car list sorted by soonest-to-expire (expired first, then projected days, then km remaining)
-- UI: see [RUCBuddyApp.swift](file:///Users/nic/code/mine/RUCBuddy/RUCBuddy/RUCBuddyApp.swift), [ContentView.swift](file:///Users/nic/code/mine/RUCBuddy/RUCBuddy/ContentView.swift), [Views.swift](file:///Users/nic/code/mine/RUCBuddy/RUCBuddy/Views.swift)
+- UI: see [RucordApp.swift](file:///Users/nic/code/mine/Rucord/Rucord/RucordApp.swift), [ContentView.swift](file:///Users/nic/code/mine/Rucord/Rucord/ContentView.swift), [Views.swift](file:///Users/nic/code/mine/Rucord/Rucord/Views.swift)
   - Home: `CarListView`
   - Add: `AddCarView`
   - Detail: `CarDetailView`
