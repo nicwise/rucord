@@ -14,17 +14,23 @@ struct CarListView: View {
                                            systemImage: "car",
                                            description: Text("Add your first car to start tracking RUC."))
                 } else {
-                    List {
-                        ForEach(store.cars) { car in
-                            NavigationLink(value: car.id) {
-                                CarRowView(car: car)
+                    ScrollView {
+                        
+                            LazyVStack(spacing: 16) {
+                                ForEach(store.cars) { car in
+                                    NavigationLink(value: car.id) {
+                                        CarRowView(car: car)
+                                            .environmentObject(store)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                }
                             }
-                        }
-                        .onDelete(perform: store.deleteCar)
+                            .padding(.bottom, 8)
                     }
                 }
             }
             .navigationTitle("Rucord")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(action: { showingSettings = true }) {
@@ -58,42 +64,179 @@ struct CarListView: View {
 
 struct CarRowView: View {
     let car: Car
+    @EnvironmentObject var store: CarStore
+    @State private var showingUpdateOdo = false
+    @State private var newOdo: String = ""
+    @State private var newDate: Date = Date()
     
     private let kmDueSoonThreshold = 500
     private let daysDueSoonThreshold = 7.0
     
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(car.plate)
-                    .font(.headline)
-                Text("Odo: \(car.latestOdometer.formatted()) km")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 4) {
-                if car.distanceRemaining == 0 {
-                    Label("RUC expired", systemImage: "exclamationmark.triangle.fill")
+        VStack(spacing: 0) {
+            // Car Image
+            Image("default-car-image")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(height: 200)
+                .clipped()
+                .clipShape(UnevenRoundedRectangle(topLeadingRadius: 12, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: 12))
+            
+            VStack(spacing: 12) {
+                // License plate and days info
+                HStack {
+                    Text(car.plate)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Spacer()
+                    
+                    if car.distanceRemaining == 0 {
+                        Text("EXPIRED")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.red)
+                    } else if let days = car.projectedDaysRemaining {
+                        let dueSoon = days <= daysDueSoonThreshold
+                        Text("~\(Int(days)) days")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(dueSoon ? .orange : .orange)
+                    }
+                }
+                
+                // Odometer and date
+                HStack {
+                    Text("Odo: \(car.latestOdometer.formatted()) km")
                         .font(.subheadline)
-                        .foregroundStyle(.red)
-                } else if let date = car.projectedExpiryDate, let days = car.projectedDaysRemaining {
-                    let dueSoon = days <= daysDueSoonThreshold
-                    Text("~\(Int(days).formatted()) days")
-                        .font(.subheadline)
-                        .foregroundStyle(dueSoon ? .orange : .secondary)
-                    Text(date, style: .date)
-                        .font(.footnote)
                         .foregroundStyle(.secondary)
-                } else {
-                    let dueSoon = car.distanceRemaining <= kmDueSoonThreshold
-                    Text("\(car.distanceRemaining.formatted()) km left")
-                        .font(.subheadline)
-                        .foregroundStyle(dueSoon ? .orange : .secondary)
+                    
+                    Spacer()
+                    
+                    if let date = car.projectedExpiryDate {
+                        Text(date, style: .date)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else if let latest = car.latestEntry {
+                        Text(latest.date, style: .date)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                // Update Odometer Button
+                Button(action: { showingUpdateOdo = true }) {
+                    HStack {
+                        Image(systemName: "gauge.with.dots.needle.67percent")
+                        Text("Update Odometer")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundStyle(.white)
+                    .font(.headline)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+        }
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .sheet(isPresented: $showingUpdateOdo) {
+            UpdateOdometerView(car: car)
+                .environmentObject(store)
+        }
+    }
+}
+
+struct UpdateOdometerView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var store: CarStore
+    let car: Car
+    @State private var newOdo: String = ""
+    @State private var newDate: Date = Date()
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Update Odometer") {
+                    TextField("Current odometer (km)", text: $newOdo)
+                        .keyboardType(.numberPad)
+                    DatePicker("Date", selection: $newDate, displayedComponents: .date)
+                }
+                
+                Section("Quick Options") {
+                    Button("Quick +100 km") { 
+                        newOdo = String(car.latestOdometer + 100)
+                    }
+                    Button("Quick +500 km") { 
+                        newOdo = String(car.latestOdometer + 500)
+                    }
+                    Button("Quick +1000 km") { 
+                        newOdo = String(car.latestOdometer + 1000)
+                    }
+                }
+                
+                Section("Current Status") {
+                    HStack {
+                        Text("Last reading")
+                        Spacer()
+                        Text("\(car.latestOdometer) km")
+                            .foregroundStyle(.secondary)
+                    }
+                    HStack {
+                        Text("RUC expires at")
+                        Spacer()
+                        Text("\(car.expiryOdometer) km")
+                            .foregroundStyle(.secondary)
+                    }
+                    if car.distanceRemaining > 0 {
+                        HStack {
+                            Text("Distance remaining")
+                            Spacer()
+                            Text("\(car.distanceRemaining) km")
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        HStack {
+                            Text("Status")
+                            Spacer()
+                            Text("RUC EXPIRED")
+                                .foregroundStyle(.red)
+                                .fontWeight(.medium)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Update \(car.plate)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { 
+                        addReading()
+                        dismiss()
+                    }
+                    .disabled(!canAdd)
                 }
             }
         }
-        .padding(.vertical, 4)
+    }
+    
+    private var canAdd: Bool {
+        guard let v = Int(newOdo) else { return false }
+        return v > car.latestOdometer
+    }
+    
+    private func addReading() {
+        guard let v = Int(newOdo) else { return }
+        let entry = OdometerEntry(date: newDate, value: v)
+        store.addEntry(entry, to: car)
     }
 }
 
