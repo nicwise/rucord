@@ -7,10 +7,15 @@ Rucord is a small SwiftUI iOS app to track NZ Road User Charges (RUC) for one or
 - Multiple cars (by plate)
 - Set the RUC expiry odometer for each car
 - Add odometer readings (date + km)
-- Home screen shows:
-  - Latest odometer
-  - Km remaining to RUC expiry, or projected days and date when enough history exists
-  - Due-soon highlighting (<= 500 km or <= 7 days)
+- Beautiful card-based home screen with:
+  - Car images and license plates prominently displayed
+  - Latest odometer reading and projected days remaining
+  - Due-soon highlighting (<= 500 km or <= 7 days) in orange
+  - One-tap "Update Odometer" button on each card
+- Quick Update Odometer modal with:
+  - Easy odometer entry with date picker
+  - Quick increment buttons (+100, +500, +1000 km)
+  - Current status overview (last reading, RUC expiry, distance remaining)
 - Car detail screen:
   - Summary with projections
   - Quick bump menu to increase expiry odometer by preset amounts (e.g., +1,000, +5,000)
@@ -21,21 +26,25 @@ Rucord is a small SwiftUI iOS app to track NZ Road User Charges (RUC) for one or
 
 > The image filenames indicate the screen they represent.
 
-- Home (list of cars)
+- Home screen with beautiful car cards
   
   ![Home](shots/1-homepage.png)
 
-- Car detail (summary, add reading, history)
+- Settings and about screen
   
-  ![Car detail](shots/2-ViewCar.png)
+  ![Settings](shots/2-settings.png)
 
-- Quick bump menu
+- Add new car form
   
-  ![Quick bump](shots/3-QuickAdd.png)
+  ![Add car](shots/3-add_car.png)
 
-- Add car (with initial reading and expiry odometer)
+- Car detail screen with editing and history
   
-  ![Add car](shots/4-NewCar.png)
+  ![Car detail](shots/4-edit_car.png)
+
+- Update Odometer modal with quick options
+  
+  ![Update Odometer](shots/5-update_odo.png)
 
 ## Build and run
 
