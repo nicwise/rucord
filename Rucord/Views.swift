@@ -132,7 +132,7 @@ struct CarRowView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(.blue)
                     .foregroundStyle(.white)
                     .font(.headline)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -142,9 +142,9 @@ struct CarRowView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 16)
         }
-        .background(Color(.systemBackground))
+        .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .shadow(color: Color.primary.opacity(0.1), radius: 4, x: 0, y: 2)
         .sheet(isPresented: $showingUpdateOdo) {
             UpdateOdometerView(car: car)
                 .environmentObject(store)
