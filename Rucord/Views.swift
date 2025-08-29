@@ -29,9 +29,14 @@ struct CarListView: View {
                     }
                 }
             }
-            .navigationTitle("Rucord")
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Image(systemName: "car")
+                        .font(.title2)
+                        .fontWeight(.medium)
+                }
                 ToolbarItem(placement: .topBarLeading) {
                     Button(action: { showingSettings = true }) {
                         Image(systemName: "gearshape")
