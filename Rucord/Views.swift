@@ -78,16 +78,7 @@ struct CarRowView: View {
     private let daysDueSoonThreshold = 7.0
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Car Image
-            Image("default-car-image")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(height: 200)
-                .clipped()
-                .clipShape(UnevenRoundedRectangle(topLeadingRadius: 12, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: 12))
-            
-            VStack(spacing: 12) {
+        VStack(spacing: 12) {
                 // License plate and days info
                 HStack {
                     Text(car.plate)
@@ -143,12 +134,10 @@ struct CarRowView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 .buttonStyle(PlainButtonStyle())
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
         .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: Color.primary.opacity(0.1), radius: 4, x: 0, y: 2)
         .sheet(isPresented: $showingUpdateOdo) {
             UpdateOdometerView(car: car)
