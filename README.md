@@ -8,18 +8,19 @@ Rucord is a small SwiftUI iOS app to track NZ Road User Charges (RUC) for one or
 - Set the RUC expiry odometer for each car
 - Add odometer readings (date + km)
 - Beautiful card-based home screen with:
-  - Car images and license plates prominently displayed
+  - Clean license plates and odometer readings with car icon
   - Latest odometer reading and projected days remaining
   - Due-soon highlighting (<= 500 km or <= 7 days) in orange
-  - One-tap "Update Odometer" button on each card
+  - Subtle gauge icon for quick odometer updates
 - Quick Update Odometer modal with:
-  - Easy odometer entry with date picker
+  - Auto-focused odometer entry with date picker
   - Quick increment buttons (+100, +500, +1000 km)
   - Current status overview (last reading, RUC expiry, distance remaining)
 - Car detail screen:
   - Summary with projections
-  - Quick bump menu to increase expiry odometer by preset amounts (e.g., +1,000, +5,000)
+  - Quick add menu to increase expiry odometer by preset amounts (+1,000, +2,000, +5,000, +10,000 km)
   - History of readings; collapsed by default to the latest 3 with Show all/Show less
+- Auto-focused input fields for better user experience
 - Persistent storage (simple JSON in Documents)
 
 ## Screenshots
@@ -48,7 +49,7 @@ Rucord is a small SwiftUI iOS app to track NZ Road User Charges (RUC) for one or
 
 ## Build and run
 
-Requirements: Xcode 15+ (Swift 5, SwiftUI).
+Requirements: Xcode 18+ (Swift 5, SwiftUI).
 
 - Open `Rucord.xcodeproj` in Xcode and run the `Rucord` scheme on iOS.
 - Or build via command line:
@@ -83,4 +84,4 @@ Note: The project’s deployment target may be higher than your installed iOS SD
 - Notifications when near expiry
 - iCloud sync
 - Widgets and shortcuts
-- Custom quick-bump amounts
+- Export/import data
