@@ -109,6 +109,13 @@ struct CarRowView: View {
                     
                     Spacer()
                     
+                    Button(action: { showingUpdateOdo = true }) {
+                        Image(systemName: "gauge.with.dots.needle.67percent")
+                            .font(.subheadline)
+                            .foregroundStyle(.blue)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
                     if let date = car.projectedExpiryDate {
                         Text(date, style: .date)
                             .font(.subheadline)
@@ -119,21 +126,6 @@ struct CarRowView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                
-                // Update Odometer Button
-                Button(action: { showingUpdateOdo = true }) {
-                    HStack {
-                        Image(systemName: "gauge.with.dots.needle.67percent")
-                        Text("Update Odometer")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(.blue)
-                    .foregroundStyle(.white)
-                    .font(.headline)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-                .buttonStyle(PlainButtonStyle())
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 16)
