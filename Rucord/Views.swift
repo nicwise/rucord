@@ -238,6 +238,7 @@ struct AddCarView: View {
     @State private var expiryOdo: String = ""
     @State private var initialOdo: String = ""
     @State private var initialDate: Date = Date()
+    @FocusState private var plateFieldFocused: Bool
     
     var body: some View {
         NavigationStack {
@@ -246,6 +247,7 @@ struct AddCarView: View {
                     TextField("Number plate (e.g. ABC123)", text: $plate)
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
+                        .focused($plateFieldFocused)
                 }
                 Section("Initial reading") {
                     TextField("Odometer km", text: $initialOdo)
@@ -258,6 +260,9 @@ struct AddCarView: View {
                 }
             }
             .navigationTitle("Add Car")
+            .onAppear {
+                plateFieldFocused = true
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
