@@ -152,6 +152,7 @@ struct UpdateOdometerView: View {
     let car: Car
     @State private var newOdo: String = ""
     @State private var newDate: Date = Date()
+    @FocusState private var odometerFieldFocused: Bool
     
     var body: some View {
         NavigationStack {
@@ -159,6 +160,7 @@ struct UpdateOdometerView: View {
                 Section("Update Odometer") {
                     TextField("Current odometer (km)", text: $newOdo)
                         .keyboardType(.numberPad)
+                        .focused($odometerFieldFocused)
                     DatePicker("Date", selection: $newDate, displayedComponents: .date)
                 }
                 
@@ -207,6 +209,9 @@ struct UpdateOdometerView: View {
             }
             .navigationTitle("Update \(car.plate)")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                odometerFieldFocused = true
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
