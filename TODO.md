@@ -13,7 +13,7 @@ Formed ideas (you can do these)
 - [X] Remove the car image in the main Cell, and change the cells to not have rounded corners
 - [X] In the Update Odometer, select the first entry box when the screen loads (bring the keyboard up)
 - [X] Same for add a car
-- [ ] Change "Quick bump" to be "Quick add", and set the paramters to be 1000, 2000, 5000, 10000
+- [X] Change "Quick bump" to be "Quick add", and set the paramters to be 1000, 2000, 5000, 10000
 
 
 Unformed ideas (don't do these unless asked)

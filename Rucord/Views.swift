@@ -353,11 +353,13 @@ struct CarDetailView: View {
                 }
                 if !editing {
                     HStack {
-                        Text("Quick bump")
+                        Text("Quick add")
                         Spacer()
                         Menu {
                             Button("+1,000 km") { bump(by: 1000) }
+                            Button("+2,000 km") { bump(by: 2000) }
                             Button("+5,000 km") { bump(by: 5000) }
+                            Button("+10,000 km") { bump(by: 10000) }
                         } label: {
                             Image(systemName: "plus.circle")
                         }
