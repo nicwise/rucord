@@ -99,6 +99,13 @@ struct CarRowView: View {
                             .fontWeight(.medium)
                             .foregroundStyle(dueSoon ? .orange : .orange)
                     }
+                    
+                    Button(action: { showingUpdateOdo = true }) {
+                        Image(systemName: "gauge.with.dots.needle.67percent")
+                            .font(.subheadline)
+                            .foregroundStyle(.blue)
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
                 
                 // Odometer and date
@@ -108,13 +115,6 @@ struct CarRowView: View {
                         .foregroundStyle(.secondary)
                     
                     Spacer()
-                    
-                    Button(action: { showingUpdateOdo = true }) {
-                        Image(systemName: "gauge.with.dots.needle.67percent")
-                            .font(.subheadline)
-                            .foregroundStyle(.blue)
-                    }
-                    .buttonStyle(PlainButtonStyle())
                     
                     if let date = car.projectedExpiryDate {
                         Text(date, style: .date)
