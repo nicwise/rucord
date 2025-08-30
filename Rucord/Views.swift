@@ -26,6 +26,8 @@ struct CarListView: View {
                                 }
                             }
                             .padding(.bottom, 8)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 16)
                     }
                 }
             }
