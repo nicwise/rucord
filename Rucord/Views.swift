@@ -1,5 +1,6 @@
 import SwiftUI
 import StoreKit
+import PhotosUI
 
 struct CarListView: View {
     @EnvironmentObject var store: CarStore
@@ -15,11 +16,10 @@ struct CarListView: View {
                                            description: Text("Add your first car to start tracking RUC."))
                 } else {
                     ScrollView {
-                        
                             LazyVStack(spacing: 16) {
                                 ForEach(store.cars) { car in
                                     NavigationLink(value: car.id) {
-                                        CarRowView(car: car)
+                                        CarRowView(carId: car.id)
                                             .environmentObject(store)
                                     }
                                     .buttonStyle(PlainButtonStyle())
@@ -70,7 +70,7 @@ struct CarListView: View {
 }
 
 struct CarRowView: View {
-    let car: Car
+    let carId: UUID
     @EnvironmentObject var store: CarStore
     @State private var showingUpdateOdo = false
     @State private var newOdo: String = ""
@@ -79,8 +79,29 @@ struct CarRowView: View {
     private let kmDueSoonThreshold = 500
     private let daysDueSoonThreshold = 7.0
     
+    private var car: Car {
+        store.cars.first { $0.id == carId } ?? Car(plate: "ERROR", expiryOdometer: 0)
+    }
+    
     var body: some View {
         VStack(spacing: 12) {
+            // Car image header
+            if let imageName = car.imageName, let image = store.loadCarImage(named: imageName) {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 120)
+                    .clipped()
+                    .overlay(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.clear, .black.opacity(0.3)]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+            }
+            
+            VStack(spacing: 12) {
                 // License plate and days info
                 HStack {
                     Text(car.plate)
@@ -109,7 +130,7 @@ struct CarRowView: View {
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
-                
+                    
                 // Odometer and date
                 HStack {
                     Text("Odo: \(car.latestOdometer.formatted()) km")
@@ -128,10 +149,14 @@ struct CarRowView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+            }
+            .padding(.horizontal, car.imageName != nil ? 16 : 0)
+            .padding(.vertical, car.imageName != nil ? 16 : 0)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 16)
+        .padding(.horizontal, car.imageName != nil ? 0 : 16)
+        .padding(.vertical, car.imageName != nil ? 0 : 16)
         .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: car.imageName != nil ? 12 : 8))
         .shadow(color: Color.primary.opacity(0.1), radius: 4, x: 0, y: 2)
         .sheet(isPresented: $showingUpdateOdo) {
             UpdateOdometerView(car: car)
@@ -240,7 +265,54 @@ struct AddCarView: View {
     @State private var expiryOdo: String = ""
     @State private var initialOdo: String = ""
     @State private var initialDate: Date = Date()
+    @State private var selectedImage: PhotosPickerItem?
+    @State private var carImage: UIImage?
+    @State private var showingImagePicker = false
     @FocusState private var plateFieldFocused: Bool
+    
+    private var imagePickerSection: some View {
+        Section("Car Photo") {
+            HStack {
+                if let selectedCarImage = carImage {
+                    Image(uiImage: selectedCarImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 80, height: 80)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    
+                    VStack(alignment: .leading) {
+                        Text("Photo selected")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Button("Remove") {
+                            carImage = nil
+                            selectedImage = nil
+                        }
+                        .foregroundStyle(.red)
+                    }
+                    
+                    Spacer()
+                }
+                
+                PhotosPicker(selection: $selectedImage,
+                           matching: .images,
+                           photoLibrary: .shared()) {
+                    Label(carImage == nil ? "Add Photo" : "Change Photo", 
+                          systemImage: "camera")
+                }
+            }
+        }
+        .onChange(of: selectedImage) { _, newValue in
+            Task {
+                if let newValue = newValue,
+                   let data = try? await newValue.loadTransferable(type: Data.self),
+                   let image = UIImage(data: data) {
+                    carImage = image
+                }
+            }
+        }
+    }
     
     var body: some View {
         NavigationStack {
@@ -251,6 +323,8 @@ struct AddCarView: View {
                         .autocorrectionDisabled()
                         .focused($plateFieldFocused)
                 }
+                
+                imagePickerSection
                 Section("Initial reading") {
                     TextField("Odometer km", text: $initialOdo)
                         .keyboardType(.numberPad)
@@ -289,7 +363,13 @@ struct AddCarView: View {
     private func save() {
         guard let expiry = Int(expiryOdo), let start = Int(initialOdo) else { return }
         let first = OdometerEntry(date: initialDate, value: start)
-        let car = Car(plate: plate, expiryOdometer: expiry, entries: [first])
+        var car = Car(plate: plate, expiryOdometer: expiry, entries: [first])
+        
+        // Save image if selected
+        if let image = carImage {
+            car.imageName = store.saveCarImage(image, for: car)
+        }
+        
         store.addCar(car)
         dismiss()
     }
@@ -303,6 +383,8 @@ struct CarDetailView: View {
     @State private var editing = false
     @State private var showRUCQuick = false
     @State private var showAllHistory = false
+    @State private var selectedImage: PhotosPickerItem?
+    @State private var pendingCarImage: UIImage?
     
     var body: some View {
         Form {
@@ -329,6 +411,60 @@ struct CarDetailView: View {
                     HStack { Text("Est. date"); Spacer(); Text(date, style: .date) }
                 } else {
                     HStack { Text("Distance left"); Spacer(); Text("\(car.distanceRemaining) km") }
+                }
+            }
+            
+            if editing {
+                Section("Car Photo") {
+                    HStack {
+                        if let pendingImage = pendingCarImage, pendingImage.size.width > 0 {
+                            Image(uiImage: pendingImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 80, height: 80)
+                                .clipped()
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        } else if pendingCarImage == nil, let imageName = car.imageName, let image = store.loadCarImage(named: imageName) {
+                            Image(uiImage: image)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 80, height: 80)
+                                .clipped()
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            let hasImage = (car.imageName != nil && pendingCarImage == nil) || 
+                                          (pendingCarImage != nil && pendingCarImage!.size.width > 0)
+                            
+                            if hasImage {
+                                // Has image - show only remove button
+                                Button("Remove Photo") {
+                                    pendingCarImage = UIImage() // Use empty UIImage as marker for removal
+                                    selectedImage = nil
+                                }
+                                .foregroundStyle(.red)
+                            } else {
+                                // No image - show add button
+                                PhotosPicker(selection: $selectedImage,
+                                           matching: .images,
+                                           photoLibrary: .shared()) {
+                                    Label("Add Photo", systemImage: "camera")
+                                }
+                            }
+                        }
+                        
+                        Spacer()
+                    }
+                }
+                .onChange(of: selectedImage) { _, newValue in
+                    Task {
+                        if let newValue = newValue,
+                           let data = try? await newValue.loadTransferable(type: Data.self),
+                           let image = UIImage(data: data) {
+                            pendingCarImage = image
+                        }
+                    }
                 }
             }
             
@@ -395,7 +531,35 @@ struct CarDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(editing ? "Done" : "Edit") {
-                    if editing { store.updateCar(car) }
+                    if editing { 
+                        // Handle image changes
+                        if let newImage = pendingCarImage {
+                            if newImage.size.width > 0 {
+                                // Update with new image
+                                store.updateCarImage(car, with: newImage)
+                            } else {
+                                // Remove image (empty UIImage marker)
+                                store.updateCarImage(car, with: nil)
+                            }
+                            // Update local car to reflect the new imageName
+                            if let updated = store.cars.first(where: { $0.id == car.id }) {
+                                car = updated
+                            }
+                        }
+                        
+                        store.updateCar(car)
+                        
+                        // Clear pending image state
+                        pendingCarImage = nil
+                        selectedImage = nil
+                    } else {
+                        // Starting edit mode - refresh car data and clear any pending changes
+                        if let updated = store.cars.first(where: { $0.id == car.id }) {
+                            car = updated
+                        }
+                        pendingCarImage = nil
+                        selectedImage = nil
+                    }
                     withAnimation { editing.toggle() }
                 }
             }

@@ -18,12 +18,14 @@ struct Car: Identifiable, Codable, Equatable {
     var plate: String
     var expiryOdometer: Int // when current RUC block expires (km)
     var entries: [OdometerEntry]
+    var imageName: String? // filename for local image storage
     
-    init(id: UUID = UUID(), plate: String, expiryOdometer: Int, entries: [OdometerEntry] = []) {
+    init(id: UUID = UUID(), plate: String, expiryOdometer: Int, entries: [OdometerEntry] = [], imageName: String? = nil) {
         self.id = id
         self.plate = plate.uppercased()
         self.expiryOdometer = expiryOdometer
         self.entries = entries.sorted { $0.date < $1.date }
+        self.imageName = imageName
     }
 }
 
