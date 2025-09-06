@@ -14,9 +14,9 @@ Formed ideas (you can do these)
 - [X] In the Update Odometer, select the first entry box when the screen loads (bring the keyboard up)
 - [X] Same for add a car
 - [X] Change "Quick bump" to be "Quick add", and set the paramters to be 1000, 2000, 5000, 10000
-- [ ] Keep a backup of the JSON file when writing it it, and if the main one can't be loaded, go back to the previous version
-- [ ] Allow the user to either pick a picture for their car, or take/pick a photo and use that as the header for the cell in the main list. If the user takes a picuture or picks one from their album, store it in the local file space for the app
-- [ ] Also show the car image (picked or taken) in the car detail.
+- [X] Keep a backup of the JSON file when writing it it, and if the main one can't be loaded, go back to the previous version
+- [X] Allow the user to either pick a picture for their car, or take/pick a photo and use that as the header for the cell in the main list. If the user takes a picuture or picks one from their album, store it in the local file space for the app
+- [X] Also show the car image (picked or taken) in the car detail.
 
 Unformed ideas (don't do these unless asked)
 - [ ] Move to using CloudKit for the data storage
