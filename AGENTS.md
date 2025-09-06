@@ -4,6 +4,7 @@
 - Build: `xcodebuild -scheme Rucord -project Rucord.xcodeproj -destination 'generic/platform=iOS' build`
 - Requires: Xcode 18+, Swift 5 (prefer 6), SwiftUI, iOS deployment target
 - Open in Xcode: `Rucord.xcodeproj`
+- If you need to run the app in a simulator, use an iPhone 16 with iOS 18.6
 
 ## Architecture
 - SwiftUI iOS app for NZ Road User Charges (RUC) tracking
