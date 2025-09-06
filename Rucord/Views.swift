@@ -425,9 +425,9 @@ struct CarDetailView: View {
 }
 
 enum TipJar: String, CaseIterable {
-    case coffee = "com.nicwise.rucord.tip.coffee"
-    case lunch = "com.nicwise.rucord.tip.lunch"
-    case dinner = "com.nicwise.rucord.tip.dinner"
+    case coffee = "nz.fastchicken.rucord.tip.coffee"
+    case lunch = "nz.fastchicken.rucord.tip.lunch"
+    case dinner = "nz.fastchicken.rucord.tip.dinner"
     
     var name: String {
         switch self {
