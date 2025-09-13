@@ -267,39 +267,35 @@ struct AddCarView: View {
     @State private var initialDate: Date = Date()
     @State private var selectedImage: PhotosPickerItem?
     @State private var carImage: UIImage?
-    @State private var showingImagePicker = false
     @FocusState private var plateFieldFocused: Bool
     
     private var imagePickerSection: some View {
         Section("Car Photo") {
-            HStack {
-                if let selectedCarImage = carImage {
-                    Image(uiImage: selectedCarImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 80, height: 80)
-                        .clipped()
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                    
-                    VStack(alignment: .leading) {
-                        Text("Photo selected")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        Button("Remove") {
-                            carImage = nil
-                            selectedImage = nil
-                        }
-                        .foregroundStyle(.red)
-                    }
-                    
-                    Spacer()
+            let hasImage = (carImage != nil && (carImage?.size.width ?? 0) > 0)
+            
+            if hasImage, let selectedCarImage = carImage {
+                Image(uiImage: selectedCarImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 160)
+                    .clipped()
+                    .listRowInsets(EdgeInsets())
+            }
+            
+            if hasImage {
+                Button(role: .destructive) {
+                    carImage = nil
+                    selectedImage = nil
+                } label: {
+                    Label("Remove Photo", systemImage: "trash")
                 }
-                
+                .foregroundStyle(.red)
+            } else {
                 PhotosPicker(selection: $selectedImage,
-                           matching: .images,
-                           photoLibrary: .shared()) {
-                    Label(carImage == nil ? "Add Photo" : "Change Photo", 
-                          systemImage: "camera")
+                             matching: .images,
+                             photoLibrary: .shared()) {
+                    Label("Add Photo", systemImage: "camera")
                 }
             }
         }
@@ -416,45 +412,40 @@ struct CarDetailView: View {
             
             if editing {
                 Section("Car Photo") {
-                    HStack {
-                        if let pendingImage = pendingCarImage, pendingImage.size.width > 0 {
-                            Image(uiImage: pendingImage)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 80, height: 80)
-                                .clipped()
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                        } else if pendingCarImage == nil, let imageName = car.imageName, let image = store.loadCarImage(named: imageName) {
-                            Image(uiImage: image)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 80, height: 80)
-                                .clipped()
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                    let hasPending = (pendingCarImage != nil && (pendingCarImage?.size.width ?? 0) > 0)
+                    let existingImage: UIImage? = {
+                        if let name = car.imageName { return store.loadCarImage(named: name) }
+                        return nil
+                    }()
+                    let hasExisting = (existingImage != nil)
+                    let hasImage = hasPending || (pendingCarImage == nil && hasExisting)
+                    let displayImage: UIImage? = hasPending ? pendingCarImage : (pendingCarImage == nil ? existingImage : nil)
+                    
+                    if hasImage, let img = displayImage {
+                        Image(uiImage: img)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 160)
+                            .clipped()
+                            .listRowInsets(EdgeInsets())
+                    }
+                    
+                    if hasImage {
+                        Button(role: .destructive) {
+                            // mark removal with empty UIImage sentinel
+                            pendingCarImage = UIImage()
+                            selectedImage = nil
+                        } label: {
+                            Label("Remove Photo", systemImage: "trash")
                         }
-                        
-                        VStack(alignment: .leading, spacing: 8) {
-                            let hasImage = (car.imageName != nil && pendingCarImage == nil) || 
-                                          (pendingCarImage != nil && pendingCarImage!.size.width > 0)
-                            
-                            if hasImage {
-                                // Has image - show only remove button
-                                Button("Remove Photo") {
-                                    pendingCarImage = UIImage() // Use empty UIImage as marker for removal
-                                    selectedImage = nil
-                                }
-                                .foregroundStyle(.red)
-                            } else {
-                                // No image - show add button
-                                PhotosPicker(selection: $selectedImage,
-                                           matching: .images,
-                                           photoLibrary: .shared()) {
-                                    Label("Add Photo", systemImage: "camera")
-                                }
-                            }
+                        .foregroundStyle(.red)
+                    } else {
+                        PhotosPicker(selection: $selectedImage,
+                                     matching: .images,
+                                     photoLibrary: .shared()) {
+                            Label("Add Photo", systemImage: "camera")
                         }
-                        
-                        Spacer()
                     }
                 }
                 .onChange(of: selectedImage) { _, newValue in

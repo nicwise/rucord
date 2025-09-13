@@ -2,7 +2,7 @@
 
 ## Build & Test Commands
 - Build: `xcodebuild -scheme Rucord -project Rucord.xcodeproj -destination 'generic/platform=iOS' build`
-- Requires: Xcode 18+, Swift 5 (prefer 6), SwiftUI, iOS deployment target
+- Requires: Xcode 18+, Swift 6, SwiftUI, iOS deployment target
 - Open in Xcode: `Rucord.xcodeproj`
 - If you need to run the app in a simulator, use an iPhone 16 with iOS 18.6
 
@@ -18,6 +18,6 @@
 - **Navigation**: Modern `NavigationStack` with `navigationDestination(for:)`
 - **Protocols**: Conform to `Identifiable`, `Codable`, `Equatable` for models
 - **Error Handling**: Use optionals with `guard let`/`if let`, `print()` for debugging
-- **Organization**: Separate Models, Store (data), Views (UI) - use extensions for computed properties
+- **Organization**: Separate Models, Store (data), Views (UI) - use extensions for computed properties. Break views out into seperate files (per view) where appriate
 - **State**: Boolean states use `showing` prefix (e.g., `showingAdd`)
 - **Accessibility**: Include `.accessibilityLabel()` for UI elements
