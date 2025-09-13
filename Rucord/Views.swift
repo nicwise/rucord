@@ -381,6 +381,8 @@ struct CarDetailView: View {
     @State private var showAllHistory = false
     @State private var selectedImage: PhotosPickerItem?
     @State private var pendingCarImage: UIImage?
+    @State private var showingDeleteConfirm = false
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         Form {
@@ -517,6 +519,16 @@ struct CarDetailView: View {
                     }
                 }
             }
+            
+            if editing {
+                Section("Danger Zone") {
+                    Button(role: .destructive) {
+                        showingDeleteConfirm = true
+                    } label: {
+                        Label("Delete Car", systemImage: "trash")
+                    }
+                }
+            }
         }
         .navigationTitle(car.plate)
         .toolbar {
@@ -554,6 +566,15 @@ struct CarDetailView: View {
                     withAnimation { editing.toggle() }
                 }
             }
+        }
+        .confirmationDialog("Delete \(car.plate)?", isPresented: $showingDeleteConfirm, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                store.deleteCar(car)
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will permanently delete the car, its readings, and its photo. This action cannot be undone.")
         }
         .onChange(of: store.cars) { _, new in
             if let updated = new.first(where: { $0.id == car.id }) { car = updated }

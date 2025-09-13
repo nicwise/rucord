@@ -31,6 +31,15 @@ final class CarStore: ObservableObject {
         cars.remove(atOffsets: offsets)
     }
     
+    func deleteCar(_ car: Car) {
+        if let idx = cars.firstIndex(where: { $0.id == car.id }) {
+            if let imageName = cars[idx].imageName {
+                deleteCarImage(named: imageName)
+            }
+            cars.remove(at: idx)
+        }
+    }
+    
     func addEntry(_ entry: OdometerEntry, to car: Car) {
         guard let idx = cars.firstIndex(where: { $0.id == car.id }) else { return }
         var updated = cars[idx]
