@@ -19,7 +19,7 @@ Formed ideas (you can do these)
 - [X] Also show the car image (picked or taken) in the car detail.
 - [X] The image picker works well in the "edit car" screen, but when adding it doesn't. Can you make the add car one work the same as the edit car one
 - [X] Make the app show a red dot alert on the icon, and show a push notification, when the cars RUC has 14 days left to run. Opening the app should remove the red dot
-- [ ] Allow a car to be deleted - with a warning! - from the edit screen
+- [X] Allow a car to be deleted - with a warning! - from the edit screen
 
 Unformed ideas (don't do these unless asked)
 - [ ] Move to using CloudKit for the data storage

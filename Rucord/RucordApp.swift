@@ -80,6 +80,9 @@ struct RucordApp: App {
     private func scheduleRUCNotifications() async {
         let center = UNUserNotificationCenter.current()
         
+        // Remove any of our previously scheduled 14-day notifications to keep in sync with current cars
+        await removeOurPendingRUCNotifications(center)
+        
         for car in store.cars {
             guard let projectedDate = car.projectedExpiryDate else { continue }
             guard let triggerDate = Calendar.current.date(byAdding: .day, value: -14, to: projectedDate) else { continue }
@@ -126,6 +129,16 @@ struct RucordApp: App {
         }
     }
     
+    private func removeOurPendingRUCNotifications(_ center: UNUserNotificationCenter) async {
+        let requests: [UNNotificationRequest] = await withCheckedContinuation { cont in
+            center.getPendingNotificationRequests { cont.resume(returning: $0) }
+        }
+        let ids = requests.map { $0.identifier }.filter { $0.hasPrefix("ruc_14days_") }
+        if !ids.isEmpty {
+            center.removePendingNotificationRequests(withIdentifiers: ids)
+        }
+    }
+    
     private let alertedKeyPrefix = "alerted_14days_"
     
     private func alertToken(for car: Car) -> String {
@@ -153,7 +166,11 @@ struct RucordApp: App {
     
     private func refreshBadgeCount() {
         let count = nearExpiryCount()
-        UNUserNotificationCenter.current().setBadgeCount(count) { _ in }
+        let center = UNUserNotificationCenter.current()
+        center.setBadgeCount(count) { _ in }
+        if count == 0 {
+            center.removeAllDeliveredNotifications()
+        }
     }
 }
 

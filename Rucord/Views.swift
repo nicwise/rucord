@@ -527,6 +527,7 @@ struct CarDetailView: View {
                     } label: {
                         Label("Delete Car", systemImage: "trash")
                     }
+                    .foregroundStyle(.red)
                 }
             }
         }
