@@ -21,6 +21,25 @@ extension Color {
     }
 }
 
+final class RucordNotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+    static let shared = RucordNotificationDelegate()
+    private let alertedKeyPrefix = "alerted_14days_"
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        if let token = notification.request.content.userInfo["rucToken"] as? String {
+            UserDefaults.standard.set(true, forKey: alertedKeyPrefix + token)
+        }
+        completionHandler([.banner, .list, .sound, .badge])
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        if let token = response.notification.request.content.userInfo["rucToken"] as? String {
+            UserDefaults.standard.set(true, forKey: alertedKeyPrefix + token)
+        }
+        completionHandler()
+    }
+}
+
 @main
 struct RucordApp: App {
     @StateObject private var store = CarStore()
@@ -34,10 +53,11 @@ struct RucordApp: App {
                 .task { await setupNotifications() }
                 .onReceive(store.$cars) { _ in
                     Task { await scheduleRUCNotifications() }
+                    refreshBadgeCount()
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
-                        clearBadgesAndDeliveredNotifications()
+                        refreshBadgeCount()
                     }
                 }
         }
@@ -45,41 +65,53 @@ struct RucordApp: App {
     
     // MARK: - Notifications & Badges
     private func setupNotifications() async {
-        let center = UNUserNotificationCenter.current()
-        do {
-            let granted = try await center.requestAuthorization(options: [.alert, .badge, .sound])
-            if granted {
-                await scheduleRUCNotifications()
-            }
-        } catch {
-            print("Notification auth error: \(error)")
+    let center = UNUserNotificationCenter.current()
+    center.delegate = RucordNotificationDelegate.shared
+    do {
+    let granted = try await center.requestAuthorization(options: [.alert, .badge, .sound])
+    if granted {
+        await scheduleRUCNotifications()
+        }
+    } catch {
+        print("Notification auth error: \(error)")
         }
     }
     
     private func scheduleRUCNotifications() async {
         let center = UNUserNotificationCenter.current()
-        // Remove existing pending requests for our identifiers to avoid duplicates
-        center.removeAllPendingNotificationRequests()
         
         for car in store.cars {
             guard let projectedDate = car.projectedExpiryDate else { continue }
-            // Trigger 14 days before projected expiry
             guard let triggerDate = Calendar.current.date(byAdding: .day, value: -14, to: projectedDate) else { continue }
+            
+            // Build dynamic body with days remaining
+            let bodyText: String = {
+                if car.distanceRemaining == 0 {
+                    return "RUC expired for \(car.plate)."
+                } else if let days = car.projectedDaysRemaining {
+                    return "About \(Int(ceil(days))) days of RUC remaining for \(car.plate)."
+                } else {
+                    return "RUC due soon for \(car.plate)."
+                }
+            }()
             
             let content = UNMutableNotificationContent()
             content.title = "RUC due soon"
-            content.body = "\(car.plate) is estimated to have 14 days of RUC remaining."
+            content.body = bodyText
             content.sound = .default
-            content.badge = 1
+            let token = alertToken(for: car)
+            content.userInfo = ["rucToken": token]
             
-            let identifier = "ruc_14days_\(car.id.uuidString)"
+            let identifier = "ruc_14days_\(token)"
             let trigger: UNNotificationTrigger
             if triggerDate <= Date() {
-                // If we're already within the window, trigger soon
+                // Already within window: only alert once per (car, expiry)
+                guard !hasAlerted(for: car) else { continue }
                 trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+                // Mark as alerted immediately to avoid repeat on next launch
+                markAlerted(for: car)
             } else {
                 var comps = Calendar.current.dateComponents([.year, .month, .day], from: triggerDate)
-                // Optional: fire at 9am local time for visibility
                 comps.hour = 9
                 comps.minute = 0
                 trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
@@ -94,10 +126,34 @@ struct RucordApp: App {
         }
     }
     
-    private func clearBadgesAndDeliveredNotifications() {
-        // Clear app icon badge when app opens
-        UIApplication.shared.applicationIconBadgeNumber = 0
-        // Remove delivered notifications
-        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+    private let alertedKeyPrefix = "alerted_14days_"
+    
+    private func alertToken(for car: Car) -> String {
+        return "\(car.id.uuidString)_\(car.expiryOdometer)"
+    }
+    
+    private func hasAlerted(for car: Car) -> Bool {
+        let token = alertToken(for: car)
+        return UserDefaults.standard.bool(forKey: alertedKeyPrefix + token)
+    }
+    
+    private func markAlerted(for car: Car) {
+        let token = alertToken(for: car)
+        UserDefaults.standard.set(true, forKey: alertedKeyPrefix + token)
+    }
+    
+    private func nearExpiryCount() -> Int {
+        let thresholdDays: Double = 14
+        return store.cars.filter { car in
+            if car.distanceRemaining == 0 { return true }
+            if let days = car.projectedDaysRemaining { return days <= thresholdDays }
+            return false
+        }.count
+    }
+    
+    private func refreshBadgeCount() {
+        let count = nearExpiryCount()
+        UNUserNotificationCenter.current().setBadgeCount(count) { _ in }
     }
 }
+
