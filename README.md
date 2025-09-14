@@ -41,6 +41,14 @@ Rucord is a SwiftUI iOS app to track NZ Road User Charges (RUC) for one or more 
   
   ![Add kms](shots/4-add-kms.PNG)
 
+## What's New
+
+- Add “Buy RUC from NZTA” link on car cards and in the car detail screen; shows when RUC is expired or under 30 days remaining.
+- Move the detail screen’s “Buy RUC” section below “Add reading” for quicker access.
+- Odometer reading reminders: every 7 days for your first 3 readings, then every 30 days thereafter.
+- 14‑day “RUC due soon” push notifications with app badge; badge clears when nothing is near due.
+- Updated screenshots to reflect the latest UI.
+
 ## Build and run
 
 Requirements: Xcode 18+ (SwiftUI, iOS 18+ simulator recommended).
