@@ -27,19 +27,19 @@ Rucord is a SwiftUI iOS app to track NZ Road User Charges (RUC) for one or more 
 
 - Home screen with vehicle cards
   
-  ![Home](shots/1-homepage.PNG)
+  ![Home](shots/1-homepage.png)
 
 - Add car
   
-  ![Add car](shots/2-add-car.PNG)
+  ![Add car](shots/2-add-car.png)
 
 - Car detail and editing
   
-  ![Edit car](shots/3-edit-car.PNG)
+  ![Edit car](shots/3-edit-car.png)
 
 - Update odometer
   
-  ![Add kms](shots/4-add-kms.PNG)
+  ![Add kms](shots/4-add-kms.png)
 
 ## What's New
 
