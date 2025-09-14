@@ -102,51 +102,64 @@ struct CarRowView: View {
             }
             
             VStack(spacing: 12) {
-                // License plate and days info
-                HStack {
-                    Text(car.plate)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    Spacer()
-                    
-                    if car.distanceRemaining == 0 {
-                        Text("EXPIRED")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.red)
-                    } else if let days = car.projectedDaysRemaining {
-                        let dueSoon = days <= daysDueSoonThreshold
-                        Text("~\(Int(days)) days")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(dueSoon ? .orange : .orange)
-                    }
-                    
-                    Button(action: { showingUpdateOdo = true }) {
-                        Image(systemName: "gauge.with.dots.needle.67percent")
-                            .font(.subheadline)
-                            .foregroundStyle(.blue)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                }
-                    
-                // Odometer and date
-                HStack {
-                    Text("Odo: \(car.latestOdometer.formatted()) km")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    
-                    Spacer()
-                    
-                    if let date = car.projectedExpiryDate {
-                        Text(date, style: .date)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    } else if let latest = car.latestEntry {
-                        Text(latest.date, style: .date)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+            // License plate and days info
+            HStack {
+            Text(car.plate)
+            .font(.title2)
+            .fontWeight(.bold)
+            
+            Spacer()
+            
+            if car.distanceRemaining == 0 {
+            Text("EXPIRED")
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .foregroundStyle(.red)
+            } else if let days = car.projectedDaysRemaining {
+            let dueSoon = days <= daysDueSoonThreshold
+            Text("about \(Int(days)) days")
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .foregroundStyle(dueSoon ? .orange : .orange)
+            }
+            
+            Button(action: { showingUpdateOdo = true }) {
+            Image(systemName: "gauge.with.dots.needle.67percent")
+            .font(.subheadline)
+            .foregroundStyle(.blue)
+            }
+            .buttonStyle(PlainButtonStyle())
+            }
+            
+            // Odometer and date
+            HStack {
+            Text("Odo: \(car.latestOdometer.formatted()) km")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            
+            Spacer()
+            
+            if let date = car.projectedExpiryDate {
+            Text(date, style: .date)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            } else if let latest = car.latestEntry {
+            Text(latest.date, style: .date)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            }
+            }
+                
+                // Buy RUC link inside the card when near expiry or expired
+                if car.distanceRemaining == 0 || (car.projectedDaysRemaining ?? Double.infinity) < 30 {
+                    HStack {
+                        Link(destination: URL(string: "https://transact.nzta.govt.nz/v2/purchase-ruc")!) {
+                            Label("Buy RUC from NZTA", systemImage: "link.circle.fill")
+                                .font(.subheadline)
+                        }
+                        .foregroundStyle(.blue)
+                        .accessibilityLabel("Open NZTA purchase RUC website")
+                        Spacer()
                     }
                 }
             }
@@ -467,6 +480,20 @@ struct CarDetailView: View {
                 DatePicker("Date", selection: $newDate, displayedComponents: .date)
                 Button("Add reading") { addReading() }
                     .disabled(!canAdd)
+            }
+            
+            // Buy RUC link when near expiry or expired (moved under Add reading)
+            if car.distanceRemaining == 0 || (car.projectedDaysRemaining ?? Double.infinity) < 30 {
+                Section("Buy more Road User Charges") {
+                    Link(destination: URL(string: "https://transact.nzta.govt.nz/v2/purchase-ruc")!) {
+                        HStack {
+                            Image(systemName: "link.circle.fill")
+                                .foregroundStyle(.blue)
+                            Text("Buy RUC from NZTA")
+                        }
+                    }
+                    .accessibilityLabel("Open NZTA purchase RUC website")
+                }
             }
             
             Section("RUC settings") {

@@ -176,12 +176,12 @@ struct RucordApp: App {
     }
     
     private func refreshBadgeCount() {
-    let count = nearExpiryCount()
-    let center = UNUserNotificationCenter.current()
-    center.setBadgeCount(count) { _ in }
-    if count == 0 {
-    center.removeAllDeliveredNotifications()
-    }
+        let count = nearExpiryCount()
+        let center = UNUserNotificationCenter.current()
+        center.setBadgeCount(count) { _ in }
+        if count == 0 {
+         center.removeAllDeliveredNotifications()
+        }
     }
     
      // MARK: - Odometer Reading Reminders
