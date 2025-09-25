@@ -19,13 +19,17 @@ struct Car: Identifiable, Codable, Equatable {
     var expiryOdometer: Int // when current RUC block expires (km)
     var entries: [OdometerEntry]
     var imageName: String? // filename for local image storage
+    var wofExpiryDate: Date? // when WOF expires
+    var registrationExpiryDate: Date? // when registration expires
     
-    init(id: UUID = UUID(), plate: String, expiryOdometer: Int, entries: [OdometerEntry] = [], imageName: String? = nil) {
+    init(id: UUID = UUID(), plate: String, expiryOdometer: Int, entries: [OdometerEntry] = [], imageName: String? = nil, wofExpiryDate: Date? = nil, registrationExpiryDate: Date? = nil) {
         self.id = id
         self.plate = plate.uppercased()
         self.expiryOdometer = expiryOdometer
         self.entries = entries.sorted { $0.date < $1.date }
         self.imageName = imageName
+        self.wofExpiryDate = wofExpiryDate
+        self.registrationExpiryDate = registrationExpiryDate
     }
 }
 
@@ -55,6 +59,38 @@ extension Car {
     var projectedExpiryDate: Date? {
         guard let days = projectedDaysRemaining else { return nil }
         return Calendar.current.date(byAdding: .day, value: Int(ceil(days)), to: Date())
+    }
+    
+    // WOF and Registration helper properties
+    var wofDaysRemaining: Int? {
+        guard let wofExpiryDate = wofExpiryDate else { return nil }
+        return Date.daysBetween(Date(), wofExpiryDate)
+    }
+    
+    var registrationDaysRemaining: Int? {
+        guard let registrationExpiryDate = registrationExpiryDate else { return nil }
+        return Date.daysBetween(Date(), registrationExpiryDate)
+    }
+    
+    var wofDueSoon: Bool {
+        guard let days = wofDaysRemaining else { return false }
+        return days <= 42 // 6 weeks = 42 days
+    }
+    
+    var registrationDueSoon: Bool {
+        guard let days = registrationDaysRemaining else { return false }
+        return days <= 42 // 6 weeks = 42 days
+    }
+    
+    // For showing on main list - 2 months = ~60 days
+    var wofDueWithin2Months: Bool {
+        guard let days = wofDaysRemaining else { return false }
+        return days <= 60
+    }
+    
+    var registrationDueWithin2Months: Bool {
+        guard let days = registrationDaysRemaining else { return false }
+        return days <= 60
     }
 }
 

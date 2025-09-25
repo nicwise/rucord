@@ -149,6 +149,35 @@ struct CarRowView: View {
             .foregroundStyle(.secondary)
             }
             }
+            
+            // WOF and Registration warnings when due within 2 months
+            if car.wofDueWithin2Months || car.registrationDueWithin2Months {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if car.wofDueWithin2Months, let wofDate = car.wofExpiryDate, let days = car.wofDaysRemaining {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(.orange)
+                                    .font(.caption)
+                                Text("WOF expires \(wofDate, style: .date) (\(days) days)")
+                                    .font(.caption)
+                                    .foregroundStyle(days <= 14 ? .red : .orange)
+                                Spacer()
+                            }
+                        }
+                        
+                        if car.registrationDueWithin2Months, let regDate = car.registrationExpiryDate, let days = car.registrationDaysRemaining {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(.orange)
+                                    .font(.caption)
+                                Text("Registration expires \(regDate, style: .date) (\(days) days)")
+                                    .font(.caption)
+                                    .foregroundStyle(days <= 14 ? .red : .orange)
+                                Spacer()
+                            }
+                        }
+                    }
+                }
                 
                 // Buy RUC link inside the card when near expiry or expired
                 if car.distanceRemaining == 0 || (car.projectedDaysRemaining ?? Double.infinity) < 30 {
@@ -280,6 +309,8 @@ struct AddCarView: View {
     @State private var initialDate: Date = Date()
     @State private var selectedImage: PhotosPickerItem?
     @State private var carImage: UIImage?
+    @State private var wofExpiryDate: Date?
+    @State private var registrationExpiryDate: Date?
     @FocusState private var plateFieldFocused: Bool
     
     private var imagePickerSection: some View {
@@ -343,6 +374,60 @@ struct AddCarView: View {
                     TextField("Expiry odometer (km)", text: $expiryOdo)
                         .keyboardType(.numberPad)
                 }
+                
+                Section("WOF and Registration (optional)") {
+                    HStack {
+                        Text("WOF expires")
+                        Spacer()
+                        if let wofDate = wofExpiryDate {
+                            DatePicker("", selection: Binding(
+                                get: { wofDate },
+                                set: { wofExpiryDate = $0 }
+                            ), displayedComponents: .date)
+                            .labelsHidden()
+                        } else {
+                            Button("Set WOF date") {
+                                wofExpiryDate = Calendar.current.date(byAdding: .year, value: 1, to: Date()) ?? Date()
+                            }
+                        }
+                    }
+                    
+                    if wofExpiryDate != nil {
+                        HStack {
+                            Button("Clear WOF date") {
+                                wofExpiryDate = nil
+                            }
+                            .foregroundStyle(.red)
+                            Spacer()
+                        }
+                    }
+                    
+                    HStack {
+                        Text("Registration expires")
+                        Spacer()
+                        if let regDate = registrationExpiryDate {
+                            DatePicker("", selection: Binding(
+                                get: { regDate },
+                                set: { registrationExpiryDate = $0 }
+                            ), displayedComponents: .date)
+                            .labelsHidden()
+                        } else {
+                            Button("Set Registration date") {
+                                registrationExpiryDate = Calendar.current.date(byAdding: .year, value: 1, to: Date()) ?? Date()
+                            }
+                        }
+                    }
+                    
+                    if registrationExpiryDate != nil {
+                        HStack {
+                            Button("Clear Registration date") {
+                                registrationExpiryDate = nil
+                            }
+                            .foregroundStyle(.red)
+                            Spacer()
+                        }
+                    }
+                }
             }
             .navigationTitle("Add Car")
             .onAppear {
@@ -372,7 +457,7 @@ struct AddCarView: View {
     private func save() {
         guard let expiry = Int(expiryOdo), let start = Int(initialOdo) else { return }
         let first = OdometerEntry(date: initialDate, value: start)
-        var car = Car(plate: plate, expiryOdometer: expiry, entries: [first])
+        var car = Car(plate: plate, expiryOdometer: expiry, entries: [first], wofExpiryDate: wofExpiryDate, registrationExpiryDate: registrationExpiryDate)
         
         // Save image if selected
         if let image = carImage {
@@ -520,6 +605,109 @@ struct CarDetailView: View {
                             Button("+10,000 km") { bump(by: 10000) }
                         } label: {
                             Image(systemName: "plus.circle")
+                        }
+                    }
+                }
+            }
+            
+            if editing {
+                Section("WOF and Registration") {
+                    HStack {
+                        Text("WOF expires")
+                        Spacer()
+                        if let wofDate = car.wofExpiryDate {
+                            DatePicker("", selection: Binding(
+                                get: { wofDate },
+                                set: { car.wofExpiryDate = $0 }
+                            ), displayedComponents: .date)
+                            .labelsHidden()
+                        } else {
+                            Button("Set WOF date") {
+                                car.wofExpiryDate = Calendar.current.date(byAdding: .year, value: 1, to: Date()) ?? Date()
+                            }
+                        }
+                    }
+                    
+                    if car.wofExpiryDate != nil {
+                        HStack {
+                            Button("Clear WOF date") {
+                                car.wofExpiryDate = nil
+                            }
+                            .foregroundStyle(.red)
+                            Spacer()
+                        }
+                    }
+                    
+                    HStack {
+                        Text("Registration expires")
+                        Spacer()
+                        if let regDate = car.registrationExpiryDate {
+                            DatePicker("", selection: Binding(
+                                get: { regDate },
+                                set: { car.registrationExpiryDate = $0 }
+                            ), displayedComponents: .date)
+                            .labelsHidden()
+                        } else {
+                            Button("Set Registration date") {
+                                car.registrationExpiryDate = Calendar.current.date(byAdding: .year, value: 1, to: Date()) ?? Date()
+                            }
+                        }
+                    }
+                    
+                    if car.registrationExpiryDate != nil {
+                        HStack {
+                            Button("Clear Registration date") {
+                                car.registrationExpiryDate = nil
+                            }
+                            .foregroundStyle(.red)
+                            Spacer()
+                        }
+                    }
+                }
+            } else {
+                // Show WOF and Registration status when not editing
+                if car.wofExpiryDate != nil || car.registrationExpiryDate != nil {
+                    Section("WOF and Registration") {
+                        if let wofDate = car.wofExpiryDate {
+                            HStack {
+                                Text("WOF expires")
+                                Spacer()
+                                Text(wofDate, style: .date)
+                                    .foregroundStyle(car.wofDueSoon ? .red : .secondary)
+                                if car.wofDueSoon {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .foregroundStyle(.red)
+                                }
+                            }
+                            if let days = car.wofDaysRemaining {
+                                HStack {
+                                    Text("Days until WOF due")
+                                    Spacer()
+                                    Text("\(days)")
+                                        .foregroundStyle(days <= 42 ? .red : .secondary)
+                                }
+                            }
+                        }
+                        
+                        if let regDate = car.registrationExpiryDate {
+                            HStack {
+                                Text("Registration expires")
+                                Spacer()
+                                Text(regDate, style: .date)
+                                    .foregroundStyle(car.registrationDueSoon ? .red : .secondary)
+                                if car.registrationDueSoon {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .foregroundStyle(.red)
+                                }
+                            }
+                            if let days = car.registrationDaysRemaining {
+                                HStack {
+                                    Text("Days until Registration due")
+                                    Spacer()
+                                    Text("\(days)")
+                                        .foregroundStyle(days <= 42 ? .red : .secondary)
+                                }
+                            }
                         }
                     }
                 }
