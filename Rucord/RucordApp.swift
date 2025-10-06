@@ -71,9 +71,11 @@ struct RucordApp: App {
             CarListView()
                 .environmentObject(store)
                 .tint(Color(hex: 0x4ab1ff))
-                .task { await setupNotifications() }
-                .onReceive(store.$cars) { _ in
+                .onReceive(store.$cars) { cars in
                     Task {
+                        if !cars.isEmpty {
+                            await setupNotifications()
+                        }
                         await scheduleRUCNotifications()
                         await scheduleReadingReminders()
                         await scheduleWOFRegistrationNotifications()
