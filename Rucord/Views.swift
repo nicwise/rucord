@@ -182,7 +182,7 @@ struct CarRowView: View {
                 // Buy RUC link inside the card when near expiry or expired
                 if car.distanceRemaining == 0 || (car.projectedDaysRemaining ?? Double.infinity) < 30 {
                     HStack {
-                        Link(destination: URL(string: "https://transact.nzta.govt.nz/v2/purchase-ruc")!) {
+                        Link(destination: URL(string: "https://transact.nzta.govt.nz/v2/purchase-ruc?plate=\(car.plate)")!) {
                             Label("Buy RUC from NZTA", systemImage: "link.circle.fill")
                                 .font(.subheadline)
                         }
@@ -570,7 +570,7 @@ struct CarDetailView: View {
             // Buy RUC link when near expiry or expired (moved under Add reading)
             if car.distanceRemaining == 0 || (car.projectedDaysRemaining ?? Double.infinity) < 30 {
                 Section("Buy more Road User Charges") {
-                    Link(destination: URL(string: "https://transact.nzta.govt.nz/v2/purchase-ruc")!) {
+                    Link(destination: URL(string: "https://transact.nzta.govt.nz/v2/purchase-ruc?plate=\(car.plate)")!) {
                         HStack {
                             Image(systemName: "link.circle.fill")
                                 .foregroundStyle(.blue)
