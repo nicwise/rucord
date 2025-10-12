@@ -27,7 +27,7 @@ final class RucordNotificationDelegate: NSObject, UNUserNotificationCenterDelega
     private let readingAlertedKeyPrefix = "alerted_reading_"
     private let wofAlertedKeyPrefix = "alerted_wof_"
     private let registrationAlertedKeyPrefix = "alerted_registration_"
-    
+
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         if let token = notification.request.content.userInfo["rucToken"] as? String {
             UserDefaults.standard.set(true, forKey: alertedKeyPrefix + token)
@@ -43,7 +43,7 @@ final class RucordNotificationDelegate: NSObject, UNUserNotificationCenterDelega
         }
         completionHandler([.banner, .list, .sound, .badge])
     }
-    
+
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         if let token = response.notification.request.content.userInfo["rucToken"] as? String {
             UserDefaults.standard.set(true, forKey: alertedKeyPrefix + token)
@@ -65,7 +65,7 @@ final class RucordNotificationDelegate: NSObject, UNUserNotificationCenterDelega
 struct RucordApp: App {
     @StateObject private var store = CarStore()
     @Environment(\.scenePhase) private var scenePhase
-    
+
     var body: some Scene {
         WindowGroup {
             CarListView()
@@ -89,41 +89,41 @@ struct RucordApp: App {
                 }
         }
     }
-    
+
     // MARK: - WOF and Registration Notifications
     private let wofAlertedKeyPrefix = "alerted_wof_"
     private let registrationAlertedKeyPrefix = "alerted_registration_"
-    
+
     private func wofAlertToken(for car: Car) -> String {
         let dateString = car.wofExpiryDate?.timeIntervalSince1970.description ?? "none"
         return "\(car.id.uuidString)_\(dateString)"
     }
-    
+
     private func registrationAlertToken(for car: Car) -> String {
         let dateString = car.registrationExpiryDate?.timeIntervalSince1970.description ?? "none"
         return "\(car.id.uuidString)_\(dateString)"
     }
-    
+
     private func hasWOFAlerted(for car: Car) -> Bool {
         let token = wofAlertToken(for: car)
         return UserDefaults.standard.bool(forKey: wofAlertedKeyPrefix + token)
     }
-    
+
     private func hasRegistrationAlerted(for car: Car) -> Bool {
         let token = registrationAlertToken(for: car)
         return UserDefaults.standard.bool(forKey: registrationAlertedKeyPrefix + token)
     }
-    
+
     private func markWOFAlerted(for car: Car) {
         let token = wofAlertToken(for: car)
         UserDefaults.standard.set(true, forKey: wofAlertedKeyPrefix + token)
     }
-    
+
     private func markRegistrationAlerted(for car: Car) {
         let token = registrationAlertToken(for: car)
         UserDefaults.standard.set(true, forKey: registrationAlertedKeyPrefix + token)
     }
-      
+
     private func removeOurPendingWOFRegistrationNotifications(_ center: UNUserNotificationCenter) async {
         let requests: [UNNotificationRequest] = await withCheckedContinuation { cont in
             center.getPendingNotificationRequests { cont.resume(returning: $0) }
@@ -135,23 +135,23 @@ struct RucordApp: App {
             center.removePendingNotificationRequests(withIdentifiers: allIds)
         }
     }
-      
+
     private func scheduleWOFRegistrationNotifications() async {
         let center = UNUserNotificationCenter.current()
         await removeOurPendingWOFRegistrationNotifications(center)
-        
+
         for car in store.cars {
             // Schedule WOF notification
             if let wofDate = car.wofExpiryDate {
                 guard let triggerDate = Calendar.current.date(byAdding: .day, value: -42, to: wofDate) else { continue }
-                
+
                 let content = UNMutableNotificationContent()
                 content.title = "WOF due soon"
                 content.body = "WOF expires soon for \(car.plate). Time to book a service!"
                 content.sound = .default
                 let token = wofAlertToken(for: car)
                 content.userInfo = ["wofToken": token]
-                
+
                 let identifier = "wof_\(token)"
                 let trigger: UNNotificationTrigger
                 if triggerDate <= Date() {
@@ -166,7 +166,7 @@ struct RucordApp: App {
                     comps.minute = 0
                     trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
                 }
-                
+
                 let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
                 center.add(request) { error in
                     if let error = error {
@@ -174,18 +174,18 @@ struct RucordApp: App {
                     }
                 }
             }
-            
+
             // Schedule Registration notification
             if let registrationDate = car.registrationExpiryDate {
                 guard let triggerDate = Calendar.current.date(byAdding: .day, value: -42, to: registrationDate) else { continue }
-                
+
                 let content = UNMutableNotificationContent()
                 content.title = "Registration due soon"
                 content.body = "Registration expires soon for \(car.plate). Time to renew!"
                 content.sound = .default
                 let token = registrationAlertToken(for: car)
                 content.userInfo = ["registrationToken": token]
-                
+
                 let identifier = "registration_\(token)"
                 let trigger: UNNotificationTrigger
                 if triggerDate <= Date() {
@@ -200,7 +200,7 @@ struct RucordApp: App {
                     comps.minute = 0
                     trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
                 }
-                
+
                 let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
                 center.add(request) { error in
                     if let error = error {
@@ -210,7 +210,7 @@ struct RucordApp: App {
             }
         }
     }
-    
+
     // MARK: - Notifications & Badges
     private func setupNotifications() async {
     let center = UNUserNotificationCenter.current()
@@ -226,17 +226,17 @@ struct RucordApp: App {
         print("Notification auth error: \(error)")
         }
     }
-    
+
     private func scheduleRUCNotifications() async {
         let center = UNUserNotificationCenter.current()
-        
+
         // Remove any of our previously scheduled 14-day notifications to keep in sync with current cars
         await removeOurPendingRUCNotifications(center)
-        
+
         for car in store.cars {
             guard let projectedDate = car.projectedExpiryDate else { continue }
             guard let triggerDate = Calendar.current.date(byAdding: .day, value: -14, to: projectedDate) else { continue }
-            
+
             // Build dynamic body with days remaining
             let bodyText: String = {
                 if car.distanceRemaining == 0 {
@@ -247,14 +247,14 @@ struct RucordApp: App {
                     return "RUC due soon for \(car.plate)."
                 }
             }()
-            
+
             let content = UNMutableNotificationContent()
             content.title = "RUC due soon"
             content.body = bodyText
             content.sound = .default
             let token = alertToken(for: car)
             content.userInfo = ["rucToken": token]
-            
+
             let identifier = "ruc_14days_\(token)"
             let trigger: UNNotificationTrigger
             if triggerDate <= Date() {
@@ -269,7 +269,7 @@ struct RucordApp: App {
                 comps.minute = 0
                 trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
             }
-            
+
             let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
             center.add(request) { error in
                 if let error = error {
@@ -278,7 +278,7 @@ struct RucordApp: App {
             }
         }
     }
-    
+
     private func removeOurPendingRUCNotifications(_ center: UNUserNotificationCenter) async {
         let requests: [UNNotificationRequest] = await withCheckedContinuation { cont in
             center.getPendingNotificationRequests { cont.resume(returning: $0) }
@@ -288,71 +288,71 @@ struct RucordApp: App {
             center.removePendingNotificationRequests(withIdentifiers: ids)
         }
     }
-    
+
     private let alertedKeyPrefix = "alerted_14days_"
-    
+
     private func alertToken(for car: Car) -> String {
         return "\(car.id.uuidString)_\(car.expiryOdometer)"
     }
-    
+
     private func hasAlerted(for car: Car) -> Bool {
         let token = alertToken(for: car)
         return UserDefaults.standard.bool(forKey: alertedKeyPrefix + token)
     }
-    
+
     private func markAlerted(for car: Car) {
         let token = alertToken(for: car)
         UserDefaults.standard.set(true, forKey: alertedKeyPrefix + token)
     }
-    
+
     private func carsWithExpiryIssues() -> Int {
         let thresholdDays: Double = 14
         return store.cars.filter { car in
             // Check RUC expiry
             if car.distanceRemaining == 0 { return true }
             if let days = car.projectedDaysRemaining, days <= thresholdDays { return true }
-            
+
             // Check WOF expiry (within 6 weeks = 42 days)
             if car.wofDueSoon { return true }
-            
+
             // Check Registration expiry (within 6 weeks = 42 days)
             if car.registrationDueSoon { return true }
-            
+
             return false
         }.count
     }
-    
+
     private func refreshBadgeCount() {
         let carsWithIssues = carsWithExpiryIssues()
         let center = UNUserNotificationCenter.current()
-        
+
         // Show the count of cars with issues (option 2)
         center.setBadgeCount(carsWithIssues) { _ in }
-        
+
         if carsWithIssues == 0 {
             center.removeAllDeliveredNotifications()
         }
     }
-    
+
      // MARK: - Odometer Reading Reminders
      private let readingAlertedKeyPrefix = "alerted_reading_"
-     
+
      private func readingAlertToken(for car: Car) -> String {
          let lastId = car.latestEntry?.id.uuidString ?? "none"
          let interval = car.entries.count < 3 ? 7 : 30
          return "\(car.id.uuidString)_\(lastId)_\(interval)"
      }
-     
+
      private func hasReadingAlerted(for car: Car) -> Bool {
          let token = readingAlertToken(for: car)
          return UserDefaults.standard.bool(forKey: readingAlertedKeyPrefix + token)
      }
-     
+
      private func markReadingAlerted(for car: Car) {
          let token = readingAlertToken(for: car)
          UserDefaults.standard.set(true, forKey: readingAlertedKeyPrefix + token)
      }
-     
+
      private func removeOurPendingReadingNotifications(_ center: UNUserNotificationCenter) async {
          let requests: [UNNotificationRequest] = await withCheckedContinuation { cont in
              center.getPendingNotificationRequests { cont.resume(returning: $0) }
@@ -362,24 +362,24 @@ struct RucordApp: App {
              center.removePendingNotificationRequests(withIdentifiers: ids)
          }
      }
-     
+
      private func scheduleReadingReminders() async {
          let center = UNUserNotificationCenter.current()
          await removeOurPendingReadingNotifications(center)
-         
+
          for car in store.cars {
              // Determine interval based on number of readings
              let intervalDays = (car.entries.count < 3) ? 7 : 30
              let baseDate = car.latestEntry?.date ?? Date()
              guard let targetDate = Calendar.current.date(byAdding: .day, value: intervalDays, to: baseDate) else { continue }
-             
+
              let content = UNMutableNotificationContent()
              content.title = "Odometer reading due"
              content.body = "Please add an odometer reading for \(car.plate)."
              content.sound = .default
              let token = readingAlertToken(for: car)
              content.userInfo = ["readingToken": token]
-             
+
              let identifier = "reading_\(token)"
              let trigger: UNNotificationTrigger
              if targetDate <= Date() {
@@ -394,7 +394,7 @@ struct RucordApp: App {
                  comps.minute = 0
                  trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
              }
-             
+
              let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
              center.add(request) { error in
                  if let error = error {
@@ -404,4 +404,3 @@ struct RucordApp: App {
          }
      }
  }
-

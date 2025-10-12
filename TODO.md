@@ -22,6 +22,8 @@ Formed ideas (you can do these)
 - [X] Allow a car to be deleted - with a warning! - from the edit screen
 - [X] Put a reminder in for 7 days for the first 3 readings then every 30 days after that, to add another reading
 - [X] Like the RUC, I want to prompt the user for when their WOF (warrent of fitness) and Registration will expire, and if set, remind them with a push notification 6 weeks before it expires
+- [ ] Currently, if the remaining days are over 60, the notification shows in orange - eg "about 519 days" - on the main card. Can you make it show an estimated date if there are more than 60 days, in the normal grey text
+- [ ] And a temporary one: on startup, if the number plate is QFD123, delete the car from the database 
 
 Unformed ideas (don't do these unless asked)
 - [ ] Move to using CloudKit for the data storage

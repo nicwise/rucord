@@ -21,3 +21,4 @@
 - **Organization**: Separate Models, Store (data), Views (UI) - use extensions for computed properties. Break views out into seperate files (per view) where appriate
 - **State**: Boolean states use `showing` prefix (e.g., `showingAdd`)
 - **Accessibility**: Include `.accessibilityLabel()` for UI elements
+- **Lint** you have `swiftlint` available, and should always use it to check and fix linting errors

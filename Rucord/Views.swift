@@ -6,7 +6,7 @@ struct CarListView: View {
     @EnvironmentObject var store: CarStore
     @State private var showingAdd = false
     @State private var showingSettings = false
-    
+
     var body: some View {
         NavigationStack {
             Group {
@@ -75,14 +75,14 @@ struct CarRowView: View {
     @State private var showingUpdateOdo = false
     @State private var newOdo: String = ""
     @State private var newDate: Date = Date()
-    
+
     private let kmDueSoonThreshold = 500
     private let daysDueSoonThreshold = 7.0
-    
+
     private var car: Car {
         store.cars.first { $0.id == carId } ?? Car(plate: "ERROR", expiryOdometer: 0)
     }
-    
+
     var body: some View {
         VStack(spacing: 12) {
             // Car image header
@@ -100,29 +100,29 @@ struct CarRowView: View {
                         )
                     )
             }
-            
+
             VStack(spacing: 12) {
             // License plate and days info
             HStack {
             Text(car.plate)
             .font(.title2)
             .fontWeight(.bold)
-            
+
             Spacer()
-            
+
             if car.distanceRemaining == 0 {
             Text("EXPIRED")
             .font(.subheadline)
             .fontWeight(.medium)
             .foregroundStyle(.red)
-            } else if let days = car.projectedDaysRemaining {
+            } else if let days = car.projectedDaysRemaining, days <= 60 {
             let dueSoon = days <= daysDueSoonThreshold
             Text("about \(Int(days)) days")
             .font(.subheadline)
             .fontWeight(.medium)
-            .foregroundStyle(dueSoon ? .orange : .orange)
+            .foregroundStyle(dueSoon ? .orange : .secondary)
             }
-            
+
             Button(action: { showingUpdateOdo = true }) {
             Image(systemName: "gauge.with.dots.needle.67percent")
             .font(.subheadline)
@@ -130,15 +130,15 @@ struct CarRowView: View {
             }
             .buttonStyle(PlainButtonStyle())
             }
-            
+
             // Odometer and date
             HStack {
             Text("Odo: \(car.latestOdometer.formatted()) km")
             .font(.subheadline)
             .foregroundStyle(.secondary)
-            
+
             Spacer()
-            
+
             if let date = car.projectedExpiryDate {
             Text(date, style: .date)
             .font(.subheadline)
@@ -149,7 +149,7 @@ struct CarRowView: View {
             .foregroundStyle(.secondary)
             }
             }
-            
+
             // WOF and Registration warnings when due within 2 months
             if car.wofDueWithin2Months || car.registrationDueWithin2Months {
                     VStack(alignment: .leading, spacing: 4) {
@@ -164,7 +164,7 @@ struct CarRowView: View {
                                 Spacer()
                             }
                         }
-                        
+
                         if car.registrationDueWithin2Months, let regDate = car.registrationExpiryDate, let days = car.registrationDaysRemaining {
                             HStack {
                                 Image(systemName: "exclamationmark.triangle.fill")
@@ -178,7 +178,7 @@ struct CarRowView: View {
                         }
                     }
                 }
-                
+
                 // Buy RUC link inside the card when near expiry or expired
                 if car.distanceRemaining == 0 || (car.projectedDaysRemaining ?? Double.infinity) < 30 {
                     HStack {
@@ -214,7 +214,7 @@ struct UpdateOdometerView: View {
     @State private var newOdo: String = ""
     @State private var newDate: Date = Date()
     @FocusState private var odometerFieldFocused: Bool
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -224,19 +224,19 @@ struct UpdateOdometerView: View {
                         .focused($odometerFieldFocused)
                     DatePicker("Date", selection: $newDate, displayedComponents: .date)
                 }
-                
+
                 Section("Quick Options") {
-                    Button("Quick +100 km") { 
+                    Button("Quick +100 km") {
                         newOdo = String(car.latestOdometer + 100)
                     }
-                    Button("Quick +500 km") { 
+                    Button("Quick +500 km") {
                         newOdo = String(car.latestOdometer + 500)
                     }
-                    Button("Quick +1000 km") { 
+                    Button("Quick +1000 km") {
                         newOdo = String(car.latestOdometer + 1000)
                     }
                 }
-                
+
                 Section("Current Status") {
                     HStack {
                         Text("Last reading")
@@ -278,7 +278,7 @@ struct UpdateOdometerView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { 
+                    Button("Save") {
                         addReading()
                         dismiss()
                     }
@@ -287,12 +287,12 @@ struct UpdateOdometerView: View {
             }
         }
     }
-    
+
     private var canAdd: Bool {
         guard let v = Int(newOdo) else { return false }
         return v > car.latestOdometer
     }
-    
+
     private func addReading() {
         guard let v = Int(newOdo) else { return }
         let entry = OdometerEntry(date: newDate, value: v)
@@ -312,11 +312,11 @@ struct AddCarView: View {
     @State private var wofExpiryDate: Date?
     @State private var registrationExpiryDate: Date?
     @FocusState private var plateFieldFocused: Bool
-    
+
     private var imagePickerSection: some View {
         Section("Car Photo") {
             let hasImage = (carImage != nil && (carImage?.size.width ?? 0) > 0)
-            
+
             if hasImage, let selectedCarImage = carImage {
                 Image(uiImage: selectedCarImage)
                     .resizable()
@@ -326,7 +326,7 @@ struct AddCarView: View {
                     .clipped()
                     .listRowInsets(EdgeInsets())
             }
-            
+
             if hasImage {
                 Button(role: .destructive) {
                     carImage = nil
@@ -353,7 +353,7 @@ struct AddCarView: View {
             }
         }
     }
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -363,7 +363,7 @@ struct AddCarView: View {
                         .autocorrectionDisabled()
                         .focused($plateFieldFocused)
                 }
-                
+
                 imagePickerSection
                 Section("Initial reading") {
                     TextField("Odometer km", text: $initialOdo)
@@ -374,7 +374,7 @@ struct AddCarView: View {
                     TextField("Expiry odometer (km)", text: $expiryOdo)
                         .keyboardType(.numberPad)
                 }
-                
+
                 Section("WOF and Registration (optional)") {
                     HStack {
                         Text("WOF expires")
@@ -391,7 +391,7 @@ struct AddCarView: View {
                             }
                         }
                     }
-                    
+
                     if wofExpiryDate != nil {
                         HStack {
                             Button("Clear WOF date") {
@@ -401,7 +401,7 @@ struct AddCarView: View {
                             Spacer()
                         }
                     }
-                    
+
                     HStack {
                         Text("Registration expires")
                         Spacer()
@@ -417,7 +417,7 @@ struct AddCarView: View {
                             }
                         }
                     }
-                    
+
                     if registrationExpiryDate != nil {
                         HStack {
                             Button("Clear Registration date") {
@@ -444,7 +444,7 @@ struct AddCarView: View {
             }
         }
     }
-    
+
     private var canSave: Bool {
         guard !plate.trimmingCharacters(in: .whitespaces).isEmpty,
               let expiry = Int(expiryOdo), expiry > 0,
@@ -453,17 +453,17 @@ struct AddCarView: View {
         else { return false }
         return true
     }
-    
+
     private func save() {
         guard let expiry = Int(expiryOdo), let start = Int(initialOdo) else { return }
         let first = OdometerEntry(date: initialDate, value: start)
         var car = Car(plate: plate, expiryOdometer: expiry, entries: [first], wofExpiryDate: wofExpiryDate, registrationExpiryDate: registrationExpiryDate)
-        
+
         // Save image if selected
         if let image = carImage {
             car.imageName = store.saveCarImage(image, for: car)
         }
-        
+
         store.addCar(car)
         dismiss()
     }
@@ -481,7 +481,7 @@ struct CarDetailView: View {
     @State private var pendingCarImage: UIImage?
     @State private var showingDeleteConfirm = false
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         Form {
             Section("Summary") {
@@ -509,7 +509,7 @@ struct CarDetailView: View {
                     HStack { Text("Distance left"); Spacer(); Text("\(car.distanceRemaining) km") }
                 }
             }
-            
+
             if editing {
                 Section("Car Photo") {
                     let hasPending = (pendingCarImage != nil && (pendingCarImage?.size.width ?? 0) > 0)
@@ -520,7 +520,7 @@ struct CarDetailView: View {
                     let hasExisting = (existingImage != nil)
                     let hasImage = hasPending || (pendingCarImage == nil && hasExisting)
                     let displayImage: UIImage? = hasPending ? pendingCarImage : (pendingCarImage == nil ? existingImage : nil)
-                    
+
                     if hasImage, let img = displayImage {
                         Image(uiImage: img)
                             .resizable()
@@ -530,7 +530,7 @@ struct CarDetailView: View {
                             .clipped()
                             .listRowInsets(EdgeInsets())
                     }
-                    
+
                     if hasImage {
                         Button(role: .destructive) {
                             // mark removal with empty UIImage sentinel
@@ -558,7 +558,7 @@ struct CarDetailView: View {
                     }
                 }
             }
-            
+
             Section("Add reading") {
                 TextField("Odometer km", text: $newOdo)
                     .keyboardType(.numberPad)
@@ -566,7 +566,7 @@ struct CarDetailView: View {
                 Button("Add reading") { addReading() }
                     .disabled(!canAdd)
             }
-            
+
             // Buy RUC link when near expiry or expired (moved under Add reading)
             if car.distanceRemaining == 0 || (car.projectedDaysRemaining ?? Double.infinity) < 30 {
                 Section("Buy more Road User Charges") {
@@ -580,7 +580,7 @@ struct CarDetailView: View {
                     .accessibilityLabel("Open NZTA purchase RUC website")
                 }
             }
-            
+
             Section("RUC settings") {
                 HStack {
                     Text("Expiry odometer")
@@ -609,7 +609,7 @@ struct CarDetailView: View {
                     }
                 }
             }
-            
+
             if editing {
                 Section("WOF and Registration") {
                     HStack {
@@ -627,7 +627,7 @@ struct CarDetailView: View {
                             }
                         }
                     }
-                    
+
                     if car.wofExpiryDate != nil {
                         HStack {
                             Button("Clear WOF date") {
@@ -637,7 +637,7 @@ struct CarDetailView: View {
                             Spacer()
                         }
                     }
-                    
+
                     HStack {
                         Text("Registration expires")
                         Spacer()
@@ -653,7 +653,7 @@ struct CarDetailView: View {
                             }
                         }
                     }
-                    
+
                     if car.registrationExpiryDate != nil {
                         HStack {
                             Button("Clear Registration date") {
@@ -688,7 +688,7 @@ struct CarDetailView: View {
                                 }
                             }
                         }
-                        
+
                         if let regDate = car.registrationExpiryDate {
                             HStack {
                                 Text("Registration expires")
@@ -712,7 +712,7 @@ struct CarDetailView: View {
                     }
                 }
             }
-            
+
             Section("History") {
                 if car.entries.isEmpty {
                     Text("No readings yet").foregroundStyle(.secondary)
@@ -734,7 +734,7 @@ struct CarDetailView: View {
                     }
                 }
             }
-            
+
             if editing {
                 Section("Danger Zone") {
                     Button(role: .destructive) {
@@ -750,7 +750,7 @@ struct CarDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(editing ? "Done" : "Edit") {
-                    if editing { 
+                    if editing {
                         // Handle image changes
                         if let newImage = pendingCarImage {
                             if newImage.size.width > 0 {
@@ -765,9 +765,9 @@ struct CarDetailView: View {
                                 car = updated
                             }
                         }
-                        
+
                         store.updateCar(car)
-                        
+
                         // Clear pending image state
                         pendingCarImage = nil
                         selectedImage = nil
@@ -796,12 +796,12 @@ struct CarDetailView: View {
             if let updated = new.first(where: { $0.id == car.id }) { car = updated }
         }
     }
-    
+
     private var canAdd: Bool {
         guard let v = Int(newOdo) else { return false }
         return v > (car.latestOdometer)
     }
-    
+
     private func addReading() {
         guard let v = Int(newOdo) else { return }
         let entry = OdometerEntry(date: newDate, value: v)
@@ -809,7 +809,7 @@ struct CarDetailView: View {
         newOdo = ""
         newDate = Date()
     }
-    
+
     private func bump(by amount: Int) {
         car.expiryOdometer += amount
         store.updateCar(car)
@@ -820,7 +820,7 @@ enum TipJar: String, CaseIterable {
     case coffee = "nz.fastchicken.rucord.tip.coffee"
     case lunch = "nz.fastchicken.rucord.tip.lunch"
     case dinner = "nz.fastchicken.rucord.tip.dinner"
-    
+
     var name: String {
         switch self {
         case .coffee: return "Buy me a coffee"
@@ -828,7 +828,7 @@ enum TipJar: String, CaseIterable {
         case .dinner: return "Buy me dinner"
         }
     }
-    
+
     var emoji: String {
         switch self {
         case .coffee: return "☕️"
@@ -836,7 +836,7 @@ enum TipJar: String, CaseIterable {
         case .dinner: return "🍽️"
         }
     }
-    
+
     static func fetchProducts() async -> [Self: Product] {
         do {
             let productIDs = Self.allCases.map { $0.rawValue }
@@ -853,7 +853,7 @@ enum TipJar: String, CaseIterable {
             return [:]
         }
     }
-    
+
     func purchase(_ product: Product) async -> Bool {
         do {
             let purchaseResult = try await product.purchase()
@@ -880,9 +880,9 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var tipProducts: [TipJar: Product] = [:]
     @State private var productsFetched = false
-    @State private var pendingPurchase: TipJar? = nil
+    @State private var pendingPurchase: TipJar?
     @State private var showingSuccessAlert = false
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -902,21 +902,21 @@ struct SettingsView: View {
                         Spacer()
                     }
                     .padding(.vertical, 8)
-                    
+
                     HStack {
                         Text("Created by")
                         Spacer()
                         Text("Nic Wise and Amp")
                             .foregroundStyle(.secondary)
                     }
-                    
+
                     Link("Rucord website", destination: URL(string: "https://fastchicken.co.nz/rucord")!)
                         .foregroundStyle(.blue)
-                    
+
                     Link("Ampcode - Agentic Coding", destination: URL(string: "https://ampcode.com")!)
                         .foregroundStyle(.blue)
                 }
-                
+
                 Section("Support Development") {
                     ForEach(TipJar.allCases, id: \.self) { tip in
                         Button(action: {
@@ -972,14 +972,14 @@ struct SettingsView: View {
             }
         }
     }
-    
+
     private func purchaseTip(_ tip: TipJar) {
         guard pendingPurchase == nil, let product = tipProducts[tip] else { return }
-        
+
         withAnimation {
             pendingPurchase = tip
         }
-        
+
         Task {
             let success = await tip.purchase(product)
             await MainActor.run {
