@@ -168,10 +168,10 @@ struct RucordApp: App {
                 }
 
                 let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-                center.add(request) { error in
-                    if let error = error {
-                        print("Failed to schedule WOF notification for \(car.plate): \(error)")
-                    }
+                do {
+                    try await center.add(request)
+                } catch {
+                    print("Failed to schedule WOF notification for \(car.plate): \(error)")
                 }
             }
 
@@ -202,10 +202,10 @@ struct RucordApp: App {
                 }
 
                 let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-                center.add(request) { error in
-                    if let error = error {
-                        print("Failed to schedule Registration notification for \(car.plate): \(error)")
-                    }
+                do {
+                    try await center.add(request)
+                } catch {
+                    print("Failed to schedule Registration notification for \(car.plate): \(error)")
                 }
             }
         }
@@ -271,10 +271,10 @@ struct RucordApp: App {
             }
 
             let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-            center.add(request) { error in
-                if let error = error {
-                    print("Failed to schedule notification for \(car.plate): \(error)")
-                }
+            do {
+                try await center.add(request)
+            } catch {
+                print("Failed to schedule notification for \(car.plate): \(error)")
             }
         }
     }
@@ -313,7 +313,13 @@ struct RucordApp: App {
             if let days = car.projectedDaysRemaining, days <= thresholdDays { return true }
 
             // Check WOF expiry (within 6 weeks = 42 days)
-            if car.wofDueSoon { return true }
+            if car.wofDueSoon {
+                let isBooked = car.wofBooked ?? false
+                let isExpired = (car.wofDaysRemaining ?? 0) < 0
+                if !isBooked || isExpired {
+                    return true
+                }
+            }
 
             // Check Registration expiry (within 6 weeks = 42 days)
             if car.registrationDueSoon { return true }
@@ -396,10 +402,10 @@ struct RucordApp: App {
              }
 
              let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-             center.add(request) { error in
-                 if let error = error {
-                     print("Failed to schedule reading reminder for \(car.plate): \(error)")
-                 }
+             do {
+                 try await center.add(request)
+             } catch {
+                 print("Failed to schedule reading reminder for \(car.plate): \(error)")
              }
          }
      }

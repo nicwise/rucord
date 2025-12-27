@@ -21,8 +21,16 @@ struct Car: Identifiable, Codable, Equatable {
     var imageName: String? // filename for local image storage
     var wofExpiryDate: Date? // when WOF expires
     var registrationExpiryDate: Date? // when registration expires
+    var wofBooked: Bool? // has the WOF been booked
 
-    init(id: UUID = UUID(), plate: String, expiryOdometer: Int, entries: [OdometerEntry] = [], imageName: String? = nil, wofExpiryDate: Date? = nil, registrationExpiryDate: Date? = nil) {
+    init(id: UUID = UUID(),
+         plate: String,
+         expiryOdometer: Int,
+         entries: [OdometerEntry] = [],
+         imageName: String? = nil,
+         wofExpiryDate: Date? = nil,
+         registrationExpiryDate: Date? = nil,
+         wofBooked: Bool? = nil) {
         self.id = id
         self.plate = plate.uppercased()
         self.expiryOdometer = expiryOdometer
@@ -30,6 +38,7 @@ struct Car: Identifiable, Codable, Equatable {
         self.imageName = imageName
         self.wofExpiryDate = wofExpiryDate
         self.registrationExpiryDate = registrationExpiryDate
+        self.wofBooked = wofBooked
     }
 }
 

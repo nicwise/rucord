@@ -155,9 +155,11 @@ struct CarRowView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         if car.wofDueWithin2Months, let wofDate = car.wofExpiryDate, let days = car.wofDaysRemaining {
                             HStack {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundStyle(.orange)
-                                    .font(.caption)
+                                if (car.wofBooked ?? false) == false || days < 0 {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .foregroundStyle(.orange)
+                                        .font(.caption)
+                                }
                                 Text("WOF expires \(wofDate, style: .date) (\(days) days)")
                                     .font(.caption)
                                     .foregroundStyle(days <= 14 ? .red : .orange)
@@ -618,12 +620,16 @@ struct CarDetailView: View {
                         if let wofDate = car.wofExpiryDate {
                             DatePicker("", selection: Binding(
                                 get: { wofDate },
-                                set: { car.wofExpiryDate = $0 }
+                                set: {
+                                    car.wofExpiryDate = $0
+                                    car.wofBooked = nil
+                                }
                             ), displayedComponents: .date)
                             .labelsHidden()
                         } else {
                             Button("Set WOF date") {
                                 car.wofExpiryDate = Calendar.current.date(byAdding: .year, value: 1, to: Date()) ?? Date()
+                                car.wofBooked = nil
                             }
                         }
                     }
@@ -632,6 +638,7 @@ struct CarDetailView: View {
                         HStack {
                             Button("Clear WOF date") {
                                 car.wofExpiryDate = nil
+                                car.wofBooked = nil
                             }
                             .foregroundStyle(.red)
                             Spacer()
@@ -675,8 +682,10 @@ struct CarDetailView: View {
                                 Text(wofDate, style: .date)
                                     .foregroundStyle(car.wofDueSoon ? .red : .secondary)
                                 if car.wofDueSoon {
-                                    Image(systemName: "exclamationmark.triangle.fill")
-                                        .foregroundStyle(.red)
+                                    if (car.wofBooked ?? false) == false || (car.wofDaysRemaining ?? 0) < 0 {
+                                        Image(systemName: "exclamationmark.triangle.fill")
+                                            .foregroundStyle(.red)
+                                    }
                                 }
                             }
                             if let days = car.wofDaysRemaining {
@@ -686,6 +695,15 @@ struct CarDetailView: View {
                                     Text("\(days)")
                                         .foregroundStyle(days <= 42 ? .red : .secondary)
                                 }
+                            }
+                            if let days = car.wofDaysRemaining, days <= 30 {
+                                Toggle("WOF booked", isOn: Binding(
+                                    get: { car.wofBooked ?? false },
+                                    set: {
+                                        car.wofBooked = $0
+                                        store.updateCar(car)
+                                    }
+                                ))
                             }
                         }
 
@@ -906,14 +924,11 @@ struct SettingsView: View {
                     HStack {
                         Text("Created by")
                         Spacer()
-                        Text("Nic Wise and Amp")
+                        Text("Nic Wise")
                             .foregroundStyle(.secondary)
                     }
 
                     Link("Rucord website", destination: URL(string: "https://fastchicken.co.nz/rucord")!)
-                        .foregroundStyle(.blue)
-
-                    Link("Ampcode - Agentic Coding", destination: URL(string: "https://ampcode.com")!)
                         .foregroundStyle(.blue)
                 }
 
