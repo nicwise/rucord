@@ -49,19 +49,19 @@ final class CarStore: ObservableObject {
     }
 
     private func sort() {
-        cars.sort { a, b in
-            let aExpired = a.distanceRemaining == 0
-            let bExpired = b.distanceRemaining == 0
-            if aExpired != bExpired { return aExpired && !bExpired }
+        cars.sort { firstCar, secondCar in
+            let firstExpired = firstCar.distanceRemaining == 0
+            let secondExpired = secondCar.distanceRemaining == 0
+            if firstExpired != secondExpired { return firstExpired && !secondExpired }
 
-            let aDays = a.projectedDaysRemaining ?? Double.infinity
-            let bDays = b.projectedDaysRemaining ?? Double.infinity
-            if aDays != bDays { return aDays < bDays }
+            let firstDays = firstCar.projectedDaysRemaining ?? Double.infinity
+            let secondDays = secondCar.projectedDaysRemaining ?? Double.infinity
+            if firstDays != secondDays { return firstDays < secondDays }
 
-            if a.distanceRemaining != b.distanceRemaining {
-                return a.distanceRemaining < b.distanceRemaining
+            if firstCar.distanceRemaining != secondCar.distanceRemaining {
+                return firstCar.distanceRemaining < secondCar.distanceRemaining
             }
-            return a.plate < b.plate
+            return firstCar.plate < secondCar.plate
         }
     }
 
