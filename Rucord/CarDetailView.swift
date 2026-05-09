@@ -1,15 +1,10 @@
 import SwiftUI
-import PhotosUI
 
 struct CarDetailView: View {
     @EnvironmentObject var store: CarStore
     @State var car: Car
-    @State var newOdo: String = ""
-    @State var newDate: Date = Date()
     @State var editing = false
     @State var showAllHistory = false
-    @State var selectedImage: PhotosPickerItem?
-    @State var pendingCarImage: UIImage?
     @State var showingDeleteConfirm = false
     @Environment(\.dismiss) private var dismiss
 
@@ -18,13 +13,7 @@ struct CarDetailView: View {
             summarySection
 
             if editing {
-                carPhotoSection
-            }
-
-            addReadingSection
-
-            if shouldShowBuyRUCSection {
-                buyRUCSection
+                carColourSection
             }
 
             rucSettingsSection

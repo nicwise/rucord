@@ -4,6 +4,15 @@ struct CarListView: View {
     @EnvironmentObject var store: CarStore
     @State private var showingAdd = false
     @State private var showingSettings = false
+    @State private var selectedCarId: UUID?
+
+    private var selectedCar: Car? {
+        if let selectedCarId,
+           let car = store.cars.first(where: { $0.id == selectedCarId }) {
+            return car
+        }
+        return store.cars.first
+    }
 
     var body: some View {
         NavigationStack {
@@ -14,30 +23,46 @@ struct CarListView: View {
                         systemImage: "car",
                         description: Text("Add your first car to start tracking RUC.")
                     )
+                } else if let selectedCar {
+                    FocusedCarView(carId: selectedCar.id)
+                        .environmentObject(store)
                 } else {
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            ForEach(store.cars) { car in
-                                NavigationLink(value: car.id) {
-                                    CarRowView(carId: car.id)
-                                        .environmentObject(store)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(.bottom, 8)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
-                    }
+                    EmptyView()
                 }
             }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Image(systemName: "car")
-                        .font(.title2)
-                        .fontWeight(.medium)
+                    if store.cars.isEmpty {
+                        Image(systemName: "car")
+                            .font(.title2)
+                            .fontWeight(.medium)
+                    } else {
+                        Menu {
+                            ForEach(store.cars) { car in
+                                Button {
+                                    selectedCarId = car.id
+                                } label: {
+                                    if car.id == selectedCar?.id {
+                                        Label(car.plate, systemImage: "checkmark")
+                                    } else {
+                                        Text(car.plate)
+                                    }
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("My Garage")
+                                    .font(.headline)
+                                Image(systemName: "chevron.down")
+                                    .font(.caption2)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundStyle(.primary)
+                        }
+                        .accessibilityLabel("Select car")
+                    }
                 }
                 ToolbarItem(placement: .topBarLeading) {
                     Button(
@@ -71,11 +96,31 @@ struct CarListView: View {
                         .environmentObject(store)
                 }
             }
+            .onAppear {
+                syncSelectedCar()
+            }
+            .onChange(of: store.cars) { _, _ in
+                syncSelectedCar()
+            }
         }
+    }
+
+    private func syncSelectedCar() {
+        guard !store.cars.isEmpty else {
+            selectedCarId = nil
+            return
+        }
+
+        if let selectedCarId,
+           store.cars.contains(where: { $0.id == selectedCarId }) {
+            return
+        }
+
+        selectedCarId = store.cars.first?.id
     }
 }
 
-struct CarRowView: View {
+struct FocusedCarView: View {
     let carId: UUID
     @EnvironmentObject var store: CarStore
     @State private var showingUpdateOdo = false
@@ -95,149 +140,208 @@ struct CarRowView: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
-            if let imageName = car.imageName,
-               let image = store.loadCarImage(named: imageName) {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 120)
-                    .clipped()
-                    .overlay(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.clear, .black.opacity(0.3)]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
+        ScrollView {
+            VStack(spacing: 16) {
+                hero
+                primaryMetric
+                expiryMetricsGrid
+                actionLinks
+                metricsGrid
             }
-
-            VStack(spacing: 12) {
-                HStack {
-                    Text(car.plate)
-                        .font(.title2)
-                        .fontWeight(.bold)
-
-                    Spacer()
-
-                    if car.distanceRemaining == 0 {
-                        Text("EXPIRED")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.red)
-                    } else if let days = car.projectedDaysRemaining, days <= 60 {
-                        let dueSoon = days <= daysDueSoonThreshold
-                        Text("about \(Int(days)) days")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(dueSoon ? .orange : .secondary)
-                    }
-
-                    Button(
-                        action: { showingUpdateOdo = true },
-                        label: {
-                            Image(systemName: "gauge.with.dots.needle.67percent")
-                                .font(.subheadline)
-                                .foregroundStyle(.blue)
-                        }
-                    )
-                    .buttonStyle(.plain)
-                }
-
-                HStack {
-                    Text("Odo: \(car.latestOdometer.formatted()) km")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-
-                    Spacer()
-
-                    if let date = car.projectedExpiryDate {
-                        Text(date, style: .date)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    } else if let latest = car.latestEntry {
-                        Text(latest.date, style: .date)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                if car.wofDueWithin2Months || car.registrationDueWithin2Months {
-                    VStack(alignment: .leading, spacing: 4) {
-                        if car.wofDueWithin2Months,
-                           let wofDate = car.wofExpiryDate,
-                           let days = car.wofDaysRemaining {
-                            HStack {
-                                if (car.wofBooked ?? false) == false || days < 0 {
-                                    Image(systemName: "exclamationmark.triangle.fill")
-                                        .foregroundStyle(.orange)
-                                        .font(.caption)
-                                }
-                                Text("WOF expires \(wofDate, style: .date) (\(days) days)")
-                                    .font(.caption)
-                                    .foregroundStyle(days <= 14 ? .red : .orange)
-                                Spacer()
-                            }
-                        }
-
-                        if car.registrationDueWithin2Months,
-                           let regDate = car.registrationExpiryDate,
-                           let days = car.registrationDaysRemaining {
-                            HStack {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundStyle(.orange)
-                                    .font(.caption)
-                                Text(
-                                    "Registration expires \(regDate, style: .date) (\(days) days)"
-                                )
-                                .font(.caption)
-                                .foregroundStyle(days <= 14 ? .red : .orange)
-                                Spacer()
-                            }
-                        }
-
-                        if car.registrationDueSoon {
-                            HStack {
-                                Link(destination: NZTAURLs.registrationRenewal) {
-                                    Label(
-                                        "Renew registration with NZTA",
-                                        systemImage: "safari"
-                                    )
-                                    .font(.caption)
-                                }
-                                .foregroundStyle(.blue)
-                                .accessibilityLabel(
-                                    "Open NZTA registration renewal website in Safari"
-                                )
-                                Spacer()
-                            }
-                        }
-                    }
-                }
-
-                if shouldShowPurchaseRUCLink {
-                    HStack {
-                        Link(destination: purchaseRUCURL) {
-                            Label("Buy RUC from NZTA", systemImage: "link.circle.fill")
-                                .font(.subheadline)
-                        }
-                        .foregroundStyle(.blue)
-                        .accessibilityLabel("Open NZTA purchase RUC website")
-                        Spacer()
-                    }
-                }
-            }
-            .padding(.horizontal, car.imageName != nil ? 16 : 0)
-            .padding(.vertical, car.imageName != nil ? 16 : 0)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
         }
-        .padding(.horizontal, car.imageName != nil ? 0 : 16)
-        .padding(.vertical, car.imageName != nil ? 0 : 16)
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: car.imageName != nil ? 12 : 8))
-        .shadow(color: Color.primary.opacity(0.1), radius: 4, x: 0, y: 2)
+        .safeAreaPadding(.horizontal, 16)
         .sheet(isPresented: $showingUpdateOdo) {
             UpdateOdometerView(car: car)
                 .environmentObject(store)
+        }
+    }
+
+    private var hero: some View {
+        NavigationLink(value: car.id) {
+            ZStack(alignment: .bottomLeading) {
+                car.displayColour
+                .frame(height: 220)
+                .frame(maxWidth: .infinity)
+                .overlay(
+                    LinearGradient(
+                        gradient: Gradient(colors: [.white.opacity(0.18), .black.opacity(0.28)]),
+                        startPoint: .topLeading,
+                        endPoint: .bottom
+                    )
+                )
+
+                Image(systemName: "car.side.fill")
+                    .font(.system(size: 108, weight: .regular))
+                    .foregroundStyle(.white.opacity(0.28))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(car.plate)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    Text("View details")
+                        .font(.subheadline)
+                }
+                .foregroundStyle(.white)
+                .padding(16)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 18))
+            .shadow(color: Color.primary.opacity(0.12), radius: 6, x: 0, y: 3)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("View details for \(car.plate)")
+    }
+
+    private var primaryMetric: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("RUC remaining")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text("\(car.distanceRemaining.formatted()) km")
+                        .font(.system(size: 42, weight: .bold, design: .rounded))
+                        .foregroundStyle(car.distanceRemaining == 0 ? .red : .primary)
+                }
+
+                Spacer()
+
+                Button(
+                    action: { showingUpdateOdo = true },
+                    label: {
+                        Image(systemName: "gauge.with.dots.needle.67percent")
+                            .font(.title3)
+                    }
+                )
+                .buttonStyle(.bordered)
+                .accessibilityLabel("Update odometer")
+            }
+
+            if car.distanceRemaining == 0 {
+                Text("RUC expired")
+                    .font(.headline)
+                    .foregroundStyle(.red)
+            } else if let days = car.projectedDaysRemaining,
+                      let date = car.projectedExpiryDate {
+                let formattedDate = date.formatted(date: .abbreviated, time: .omitted)
+                Text("About \(Int(days)) \(dayLabel(for: days)), estimated \(formattedDate)")
+                    .font(.subheadline)
+                    .foregroundStyle(days <= daysDueSoonThreshold ? .orange : .secondary)
+            } else {
+                Text("Add another odometer reading to estimate when your RUC will run out.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+    }
+
+    private var metricsGrid: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+            metricCard(title: "Odometer", value: "\(car.latestOdometer.formatted()) km")
+            metricCard(title: "RUC expires", value: "\(car.expiryOdometer.formatted()) km")
+        }
+    }
+
+    @ViewBuilder
+    private var expiryMetricsGrid: some View {
+        if car.wofExpiryDate != nil || car.registrationExpiryDate != nil {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                if let wofDate = car.wofExpiryDate {
+                    metricCard(
+                        title: "WOF",
+                        value: wofDate.formatted(date: .abbreviated, time: .omitted),
+                        detail: expiryDetail(days: car.wofDaysRemaining),
+                        showsWarning: car.wofDueWithin2Months
+                            && ((car.wofBooked ?? false) == false || (car.wofDaysRemaining ?? 0) < 0)
+                    )
+                }
+
+                if let registrationDate = car.registrationExpiryDate {
+                    metricCard(
+                        title: "Registration",
+                        value: registrationDate.formatted(date: .abbreviated, time: .omitted),
+                        detail: expiryDetail(days: car.registrationDaysRemaining),
+                        showsWarning: car.registrationDueWithin2Months
+                    )
+                }
+            }
+        }
+    }
+
+    private func metricCard(
+        title: String,
+        value: String,
+        detail: String? = nil,
+        showsWarning: Bool = false
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 4) {
+                Text(title)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if showsWarning {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                }
+            }
+
+            Text(value)
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let detail {
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, minHeight: 88, alignment: .topLeading)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+
+    private func dayLabel(for days: Double) -> String {
+        Int(days) == 1 ? "day" : "days"
+    }
+
+    private func expiryDetail(days: Int?) -> String? {
+        guard let days, days <= 60 else { return nil }
+        return "Expires in \(days) \(days == 1 ? "day" : "days")"
+    }
+
+    @ViewBuilder
+    private var actionLinks: some View {
+        if shouldShowPurchaseRUCLink || car.registrationDueSoon {
+            VStack(alignment: .leading, spacing: 12) {
+                if shouldShowPurchaseRUCLink {
+                    Link(destination: purchaseRUCURL) {
+                        Label("Buy RUC from NZTA", systemImage: "link.circle.fill")
+                    }
+                    .accessibilityLabel("Open NZTA purchase RUC website")
+                }
+
+                if car.registrationDueSoon {
+                    Link(destination: NZTAURLs.registrationRenewal) {
+                        Label("Renew registration with NZTA", systemImage: "safari")
+                    }
+                    .accessibilityLabel("Open NZTA registration renewal website in Safari")
+                }
+            }
+            .font(.subheadline)
+            .foregroundStyle(.blue)
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.regularMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
 }

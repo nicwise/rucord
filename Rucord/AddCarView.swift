@@ -1,5 +1,4 @@
 import SwiftUI
-import PhotosUI
 
 struct AddCarView: View {
     @Environment(\.dismiss) private var dismiss
@@ -8,8 +7,7 @@ struct AddCarView: View {
     @State private var expiryOdo: String = ""
     @State private var initialOdo: String = ""
     @State private var initialDate: Date = Date()
-    @State private var selectedImage: PhotosPickerItem?
-    @State private var carImage: UIImage?
+    @State private var carColour: Color = .blue
     @State private var wofExpiryDate: Date?
     @State private var registrationExpiryDate: Date?
     @FocusState private var plateFieldFocused: Bool
@@ -18,46 +16,9 @@ struct AddCarView: View {
         Calendar.current.date(byAdding: .year, value: 1, to: Date()) ?? Date()
     }
 
-    private var imagePickerSection: some View {
-        Section("Car Photo") {
-            let hasImage = carImage?.size.width ?? 0 > 0
-
-            if hasImage, let selectedCarImage = carImage {
-                Image(uiImage: selectedCarImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 160)
-                    .clipped()
-                    .listRowInsets(EdgeInsets())
-            }
-
-            if hasImage {
-                Button(role: .destructive) {
-                    carImage = nil
-                    selectedImage = nil
-                } label: {
-                    Label("Remove Photo", systemImage: "trash")
-                }
-                .foregroundStyle(.red)
-            } else {
-                PhotosPicker(
-                    selection: $selectedImage,
-                    matching: .images,
-                    photoLibrary: .shared()
-                ) {
-                    Label("Add Photo", systemImage: "camera")
-                }
-            }
-        }
-        .onChange(of: selectedImage) { _, newValue in
-            Task {
-                if let newValue,
-                   let data = try? await newValue.loadTransferable(type: Data.self),
-                   let image = UIImage(data: data) {
-                    carImage = image
-                }
-            }
+    private var colourSection: some View {
+        Section("Car Colour") {
+            ColorPicker("Colour", selection: $carColour, supportsOpacity: false)
         }
     }
 
@@ -80,7 +41,7 @@ struct AddCarView: View {
                     )
                 }
 
-                imagePickerSection
+                colourSection
 
                 Section("WOF and Registration") {
                     HStack {
@@ -177,17 +138,14 @@ struct AddCarView: View {
         }
 
         let first = OdometerEntry(date: initialDate, value: start)
-        var car = Car(
+        let car = Car(
             plate: plate,
             expiryOdometer: expiry,
             entries: [first],
+            colourHex: carColour.hexString ?? "#3B82F6",
             wofExpiryDate: wofExpiryDate,
             registrationExpiryDate: registrationExpiryDate
         )
-
-        if let image = carImage {
-            car.imageName = store.saveCarImage(image, for: car)
-        }
 
         store.addCar(car)
         dismiss()

@@ -1,5 +1,4 @@
 import SwiftUI
-import PhotosUI
 
 extension CarDetailView {
     var summarySection: some View {
@@ -58,69 +57,16 @@ extension CarDetailView {
         }
     }
 
-    var carPhotoSection: some View {
-        Section("Car Photo") {
-            if hasImage, let displayImage {
-                Image(uiImage: displayImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 160)
-                    .clipped()
-                    .listRowInsets(EdgeInsets())
-            }
-
-            if hasImage {
-                Button(role: .destructive) {
-                    pendingCarImage = UIImage()
-                    selectedImage = nil
-                } label: {
-                    Label("Remove Photo", systemImage: "trash")
-                }
-                .foregroundStyle(.red)
-            } else {
-                PhotosPicker(
-                    selection: $selectedImage,
-                    matching: .images,
-                    photoLibrary: .shared()
-                ) {
-                    Label("Add Photo", systemImage: "camera")
-                }
-            }
-        }
-        .onChange(of: selectedImage) { _, newValue in
-            Task {
-                if let newValue,
-                   let data = try? await newValue.loadTransferable(type: Data.self),
-                   let image = UIImage(data: data) {
-                    pendingCarImage = image
-                }
-            }
-        }
-    }
-
-    var addReadingSection: some View {
-        Section("Add reading") {
-            TextField("Odometer km", text: $newOdo)
-                .keyboardType(.numberPad)
-            DatePicker("Date", selection: $newDate, displayedComponents: .date)
-            Button("Add reading") {
-                addReading()
-            }
-            .disabled(!canAdd)
-        }
-    }
-
-    var buyRUCSection: some View {
-        Section("Buy more Road User Charges") {
-            Link(destination: purchaseRUCURL) {
-                HStack {
-                    Image(systemName: "link.circle.fill")
-                        .foregroundStyle(.blue)
-                    Text("Buy RUC from NZTA")
-                }
-            }
-            .accessibilityLabel("Open NZTA purchase RUC website")
+    var carColourSection: some View {
+        Section("Car Colour") {
+            ColorPicker(
+                "Colour",
+                selection: Binding(
+                    get: { car.displayColour },
+                    set: { car.colourHex = $0.hexString ?? car.colourHex }
+                ),
+                supportsOpacity: false
+            )
         }
     }
 
@@ -287,16 +233,6 @@ extension CarDetailView {
                         Text("\(days)")
                             .foregroundStyle(days <= 42 ? .red : .secondary)
                     }
-                }
-
-                if car.registrationDueSoon {
-                    Link(destination: NZTAURLs.registrationRenewal) {
-                        Label("Renew registration with NZTA", systemImage: "safari")
-                    }
-                    .foregroundStyle(.blue)
-                    .accessibilityLabel(
-                        "Open NZTA registration renewal website in Safari"
-                    )
                 }
             }
         }

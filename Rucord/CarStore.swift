@@ -1,6 +1,5 @@
 import Foundation
 import Combine
-import UIKit
 
 final class CarStore: ObservableObject {
     @Published var cars: [Car] = [] {
@@ -33,9 +32,6 @@ final class CarStore: ObservableObject {
 
     func deleteCar(_ car: Car) {
         if let idx = cars.firstIndex(where: { $0.id == car.id }) {
-            if let imageName = cars[idx].imageName {
-                deleteCarImage(named: imageName)
-            }
             cars.remove(at: idx)
         }
     }
@@ -73,12 +69,6 @@ final class CarStore: ObservableObject {
     private func fileURL() -> URL { documentsURL().appendingPathComponent(fileName) }
 
     private func backupURL() -> URL { documentsURL().appendingPathComponent(backupFileName) }
-
-    private func imagesURL() -> URL {
-        let url = documentsURL().appendingPathComponent("CarImages")
-        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        return url
-    }
 
     private func load() {
         let url = fileURL()
@@ -138,51 +128,5 @@ final class CarStore: ObservableObject {
         } catch {
             print("Failed to save cars: \(error)")
         }
-    }
-
-    // MARK: Image Management
-    func saveCarImage(_ image: UIImage, for car: Car) -> String? {
-        let imageName = "\(car.id.uuidString).jpg"
-        let url = imagesURL().appendingPathComponent(imageName)
-
-        guard let data = image.jpegData(compressionQuality: 0.8) else { return nil }
-
-        do {
-            try data.write(to: url)
-            return imageName
-        } catch {
-            print("Failed to save car image: \(error)")
-            return nil
-        }
-    }
-
-    func loadCarImage(named imageName: String) -> UIImage? {
-        let url = imagesURL().appendingPathComponent(imageName)
-        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
-        return UIImage(contentsOfFile: url.path)
-    }
-
-    func deleteCarImage(named imageName: String) {
-        let url = imagesURL().appendingPathComponent(imageName)
-        try? FileManager.default.removeItem(at: url)
-    }
-
-    func updateCarImage(_ car: Car, with image: UIImage?) {
-        guard let idx = cars.firstIndex(where: { $0.id == car.id }) else { return }
-        var updated = car
-
-        // Remove old image if exists
-        if let oldImageName = car.imageName {
-            deleteCarImage(named: oldImageName)
-        }
-
-        // Save new image if provided
-        if let image = image {
-            updated.imageName = saveCarImage(image, for: car)
-        } else {
-            updated.imageName = nil
-        }
-
-        cars[idx] = updated
     }
 }

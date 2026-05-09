@@ -2,6 +2,7 @@
 
 ## Build & Test Commands
 - Build: `xcodebuild -scheme Rucord -project Rucord.xcodeproj -destination 'generic/platform=iOS' build`
+- After building, run the app in the simulator unless there is a clear reason not to.
 - Requires: Xcode 18+, Swift 6, SwiftUI, iOS deployment target
 - Open in Xcode: `Rucord.xcodeproj`
 - If you need to run the app in a simulator, use an iPhone 16 with iOS 18.6

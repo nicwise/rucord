@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 struct OdometerEntry: Identifiable, Codable, Equatable {
     let id: UUID
@@ -18,16 +19,27 @@ struct Car: Identifiable, Codable, Equatable {
     var plate: String
     var expiryOdometer: Int // when current RUC block expires (km)
     var entries: [OdometerEntry]
-    var imageName: String? // filename for local image storage
+    var colourHex: String
     var wofExpiryDate: Date? // when WOF expires
     var registrationExpiryDate: Date? // when registration expires
     var wofBooked: Bool? // has the WOF been booked
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case plate
+        case expiryOdometer
+        case entries
+        case colourHex
+        case wofExpiryDate
+        case registrationExpiryDate
+        case wofBooked
+    }
 
     init(id: UUID = UUID(),
          plate: String,
          expiryOdometer: Int,
          entries: [OdometerEntry] = [],
-         imageName: String? = nil,
+         colourHex: String = "#3B82F6",
          wofExpiryDate: Date? = nil,
          registrationExpiryDate: Date? = nil,
          wofBooked: Bool? = nil) {
@@ -35,14 +47,29 @@ struct Car: Identifiable, Codable, Equatable {
         self.plate = plate.uppercased()
         self.expiryOdometer = expiryOdometer
         self.entries = entries.sorted { $0.date < $1.date }
-        self.imageName = imageName
+        self.colourHex = colourHex
         self.wofExpiryDate = wofExpiryDate
         self.registrationExpiryDate = registrationExpiryDate
         self.wofBooked = wofBooked
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        plate = try container.decode(String.self, forKey: .plate).uppercased()
+        expiryOdometer = try container.decode(Int.self, forKey: .expiryOdometer)
+        entries = try container.decode([OdometerEntry].self, forKey: .entries)
+            .sorted { $0.date < $1.date }
+        colourHex = try container.decodeIfPresent(String.self, forKey: .colourHex) ?? "#3B82F6"
+        wofExpiryDate = try container.decodeIfPresent(Date.self, forKey: .wofExpiryDate)
+        registrationExpiryDate = try container.decodeIfPresent(Date.self, forKey: .registrationExpiryDate)
+        wofBooked = try container.decodeIfPresent(Bool.self, forKey: .wofBooked)
+    }
 }
 
 extension Car {
+    var displayColour: Color { Color(hex: colourHex) ?? .blue }
+
     var latestEntry: OdometerEntry? { entries.max(by: { $0.date < $1.date }) }
     var latestOdometer: Int { latestEntry?.value ?? 0 }
     var distanceRemaining: Int { max(expiryOdometer - latestOdometer, 0) }
@@ -100,6 +127,53 @@ extension Car {
     var registrationDueWithin2Months: Bool {
         guard let days = registrationDaysRemaining else { return false }
         return days <= 60
+    }
+}
+
+extension Color {
+    init?(hex: String) {
+        var hex = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        if hex.hasPrefix("#") {
+            hex.removeFirst()
+        }
+
+        guard hex.count == 6,
+              let value = Int(hex, radix: 16) else {
+            return nil
+        }
+
+        let red = Double((value >> 16) & 0xFF) / 255
+        let green = Double((value >> 8) & 0xFF) / 255
+        let blue = Double(value & 0xFF) / 255
+
+        self.init(red: red, green: green, blue: blue)
+    }
+
+    var hexString: String? {
+        guard let components = UIColor(self).cgColor.components else { return nil }
+
+        let red: CGFloat
+        let green: CGFloat
+        let blue: CGFloat
+
+        if components.count >= 3 {
+            red = components[0]
+            green = components[1]
+            blue = components[2]
+        } else if let white = components.first {
+            red = white
+            green = white
+            blue = white
+        } else {
+            return nil
+        }
+
+        return String(
+            format: "#%02X%02X%02X",
+            Int(red * 255),
+            Int(green * 255),
+            Int(blue * 255)
+        )
     }
 }
 
